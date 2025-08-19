@@ -3,8 +3,8 @@ fastapi==0.111.0
 uvicorn[standard]==0.30.1
 
 # Database
-sqlalchemy==2.0.30
-alembic==1.13.1
+sqlalchemy==2.0.35
+alembic==1.13.3
 
 # Web Scraping
 beautifulsoup4==4.12.3
@@ -14,8 +14,8 @@ lxml==5.2.2
 
 # Data Processing
 pandas==2.2.2
-pydantic==2.7.4
-pydantic-settings==2.3.3
+pydantic==2.9.2
+pydantic-settings==2.6.1
 
 # PDF Generation
 reportlab==4.2.0
