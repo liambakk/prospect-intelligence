@@ -4,9 +4,13 @@ import time
 from datetime import datetime
 import os
 import asyncio
+import nest_asyncio
+
+# Apply nest_asyncio to allow nested event loops (needed for Vercel)
+nest_asyncio.apply()
 
 # Import services - using real implementations
-from src.services.hunter_service import HunterService
+from services.hunter_service import HunterService
 from services.job_scraper import JobScraper
 from services.news_collector import NewsCollector
 from services.website_scraper import WebsiteScraper
@@ -180,10 +184,13 @@ def analyze_company():
         response['steps'].append({'step': 'Fetching company information', 'status': 'complete'})
         
         # Run async Hunter.io search with resolved domain
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+        
         hunter_data = loop.run_until_complete(hunter_service.search_domain(domain))
-        loop.close()
         
         # Convert Hunter data to expected format
         if hunter_data:
@@ -300,10 +307,13 @@ def generate_report():
             domain = resolved_company.get('domain') or request_data.get('domain', f"{company_name.lower().replace(' ', '').replace(',', '').replace('.', '')}.com")
             
             # Get Hunter.io data
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
+            try:
+                loop = asyncio.get_event_loop()
+            except RuntimeError:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+            
             hunter_data = loop.run_until_complete(hunter_service.search_domain(domain))
-            loop.close()
             
             # Convert Hunter data to expected format
             if hunter_data:
