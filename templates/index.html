@@ -37,7 +37,10 @@
                 
                 <div class="search-wrapper">
                     <div class="search-input-group">
-                        <input type="text" id="companyInput" class="search-input" placeholder="Enter company name..." />
+                        <div class="autocomplete-container">
+                            <input type="text" id="companyInput" class="search-input" placeholder="Enter company name..." autocomplete="off" />
+                            <div id="autocompleteDropdown" class="autocomplete-dropdown" style="display: none;"></div>
+                        </div>
                         <button id="analyzeBtn" class="analyze-button" onclick="analyzeCompany()">
                             <span>Analyze</span>
                         </button>
