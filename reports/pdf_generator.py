@@ -155,7 +155,7 @@ class PDFGenerator:
         if news_data['recent_initiatives']:
             story.append(Paragraph("Recent AI Initiatives", self.styles['CustomSubheading']))
             for initiative in news_data['recent_initiatives'][:3]:
-                initiative_text = f"" {initiative['title']} ({initiative['date']})"
+                initiative_text = f"• {initiative['title']} ({initiative['date']})"
                 story.append(Paragraph(initiative_text, self.styles['CustomBody']))
             story.append(Spacer(1, 0.2*inch))
         
@@ -181,7 +181,7 @@ class PDFGenerator:
         # Next Steps
         story.append(Paragraph("Recommended Next Steps", self.styles['CustomSubheading']))
         for step in data['recommendations']['next_steps']:
-            story.append(Paragraph(f"" {step}", self.styles['CustomBody']))
+            story.append(Paragraph(f"• {step}", self.styles['CustomBody']))
         
         # Data Sources
         story.append(PageBreak())
