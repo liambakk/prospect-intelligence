@@ -23,59 +23,158 @@ async function analyzeCompany() {
     document.getElementById('analyzeBtn').disabled = true;
     
     // Reset progress
-    const progressSteps = document.getElementById('progressSteps');
-    progressSteps.innerHTML = '';
+    const carouselTrack = document.getElementById('carouselTrack');
+    const progressDots = document.getElementById('progressDots');
+    carouselTrack.innerHTML = '';
+    progressDots.innerHTML = '';
     document.getElementById('progressPercentage').textContent = '0%';
     
-    // Define steps
+    // Define steps with enhanced descriptions
     const steps = [
-        { icon: '🔍', text: 'Fetching company information' },
-        { icon: '💼', text: 'Analyzing job postings' },
-        { icon: '📰', text: 'Collecting recent news' },
-        { icon: '🌐', text: 'Analyzing company website' },
-        { icon: '📊', text: 'Calculating AI readiness score' },
-        { icon: '💡', text: 'Generating sales recommendations' }
+        { 
+            icon: '🔍', 
+            text: 'Fetching company information',
+            subtext: 'Gathering basic company data and profile'
+        },
+        { 
+            icon: '💼', 
+            text: 'Analyzing job postings',
+            subtext: 'Scanning for AI/ML roles and tech positions'
+        },
+        { 
+            icon: '📰', 
+            text: 'Collecting recent news',
+            subtext: 'Finding latest AI initiatives and announcements'
+        },
+        { 
+            icon: '🌐', 
+            text: 'Analyzing company website',
+            subtext: 'Searching for digital transformation signals'
+        },
+        { 
+            icon: '📊', 
+            text: 'Calculating AI readiness score',
+            subtext: 'Processing data through our scoring algorithm'
+        },
+        { 
+            icon: '💡', 
+            text: 'Generating sales recommendations',
+            subtext: 'Creating personalized approach strategy'
+        }
     ];
     
-    // Add step elements
-    steps.forEach(step => {
-        const stepElement = document.createElement('div');
-        stepElement.className = 'progress-step';
-        stepElement.innerHTML = `<span>${step.icon}</span> ${step.text}`;
-        progressSteps.appendChild(stepElement);
+    // Create carousel cards
+    const cards = [];
+    steps.forEach((step, index) => {
+        const card = document.createElement('div');
+        card.className = 'carousel-card';
+        card.innerHTML = `
+            <div class="carousel-icon">${step.icon}</div>
+            <div class="carousel-text">${step.text}</div>
+            <div class="carousel-subtext">${step.subtext}</div>
+        `;
+        carouselTrack.appendChild(card);
+        cards.push(card);
+        
+        // Create progress dot
+        const dot = document.createElement('div');
+        dot.className = 'progress-dot';
+        progressDots.appendChild(dot);
     });
     
-    // Simulate progress
+    // Carousel animation logic
     let currentStep = 0;
-    const progressInterval = setInterval(() => {
-        if (currentStep < steps.length) {
-            const stepElements = progressSteps.getElementsByClassName('progress-step');
+    let dots = progressDots.getElementsByClassName('progress-dot');
+    let activeCard = null;
+    
+    const animateCarousel = () => {
+        // Remove previous card if exists
+        if (activeCard) {
+            activeCard.classList.remove('active');
+            activeCard.classList.add('exiting');
+            
+            // Mark previous dot as completed with smooth transition
             if (currentStep > 0) {
-                stepElements[currentStep - 1].className = 'progress-step complete';
-                stepElements[currentStep - 1].innerHTML = `<span>✅</span> ${steps[currentStep - 1].text}`;
+                setTimeout(() => {
+                    dots[currentStep - 1].classList.remove('active');
+                    dots[currentStep - 1].classList.add('completed');
+                }, 400);
             }
-            if (currentStep < steps.length) {
-                stepElements[currentStep].className = 'progress-step active';
-            }
-            
-            // Update progress bar and percentage
-            const progress = ((currentStep + 1) / steps.length) * 100;
-            document.getElementById('progressFill').style.width = `${progress}%`;
-            document.getElementById('progressPercentage').textContent = `${Math.round(progress)}%`;
-            
-            currentStep++;
         }
-    }, 800);
+        
+        if (currentStep < steps.length) {
+            // Show new card with proper timing
+            setTimeout(() => {
+                if (activeCard) {
+                    activeCard.classList.remove('exiting');
+                    activeCard.style.display = 'none'; // Hide completely after exit
+                }
+                
+                activeCard = cards[currentStep];
+                activeCard.style.display = 'flex'; // Make visible
+                
+                // Force reflow for smooth animation
+                void activeCard.offsetWidth;
+                
+                activeCard.classList.add('entering');
+                
+                setTimeout(() => {
+                    activeCard.classList.remove('entering');
+                    activeCard.classList.add('active');
+                }, 100); // Slightly longer delay for smoother transition
+                
+                // Update progress dot
+                dots[currentStep].classList.add('active');
+                
+                // Smooth percentage update
+                const startProgress = Math.round(((currentStep) / steps.length) * 100);
+                const endProgress = Math.round(((currentStep + 1) / steps.length) * 100);
+                animatePercentage(startProgress, endProgress, 500);
+                
+                currentStep++;
+            }, activeCard ? 800 : 0); // Wait for exit animation if there was a previous card
+        }
+    };
+    
+    // Smooth percentage animation
+    const animatePercentage = (start, end, duration) => {
+        const startTime = Date.now();
+        const updatePercent = () => {
+            const elapsed = Date.now() - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const current = Math.round(start + (end - start) * progress);
+            document.getElementById('progressPercentage').textContent = `${current}%`;
+            
+            if (progress < 1) {
+                requestAnimationFrame(updatePercent);
+            }
+        };
+        requestAnimationFrame(updatePercent);
+    };
+    
+    // Start carousel animation
+    animateCarousel();
+    const progressInterval = setInterval(animateCarousel, 2500); // Slightly slower for better viewing
     
     try {
-        // Make API call
+        // Make API call with timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 120000); // 120 second timeout
+        
         const response = await fetch('/analyze/comprehensive', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ name: companyName })
+            body: JSON.stringify({ name: companyName }),
+            signal: controller.signal
         });
+        
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
         
         const data = await response.json();
         currentAnalysisData = data;
@@ -83,14 +182,22 @@ async function analyzeCompany() {
         // Stop progress animation
         clearInterval(progressInterval);
         
-        // Complete all steps
-        const stepElements = progressSteps.getElementsByClassName('progress-step');
-        for (let i = 0; i < stepElements.length; i++) {
-            stepElements[i].className = 'progress-step complete';
-            stepElements[i].innerHTML = `<span>✅</span> ${steps[i].text}`;
-        }
-        document.getElementById('progressFill').style.width = '100%';
-        document.getElementById('progressPercentage').textContent = '100%';
+        // Complete remaining steps quickly
+        const completeRemainingSteps = () => {
+            if (currentStep < steps.length) {
+                animateCarousel();
+                setTimeout(completeRemainingSteps, 300); // Faster completion
+            } else {
+                // Mark last dot as completed
+                if (dots[dots.length - 1]) {
+                    dots[dots.length - 1].classList.remove('active');
+                    dots[dots.length - 1].classList.add('completed');
+                }
+                document.getElementById('progressPercentage').textContent = '100%';
+            }
+        };
+        
+        completeRemainingSteps();
         
         // Wait a moment then show results
         setTimeout(() => {
@@ -99,10 +206,19 @@ async function analyzeCompany() {
         
     } catch (error) {
         console.error('Error:', error);
-        alert('An error occurred while analyzing the company. Please try again.');
+        clearInterval(progressInterval);
+        
+        // More specific error messages
+        let errorMessage = 'An error occurred while analyzing the company.';
+        if (error.name === 'AbortError') {
+            errorMessage = 'The analysis is taking longer than expected. This might be due to extensive data collection. Please try again or try a different company.';
+        } else if (error.message.includes('HTTP error')) {
+            errorMessage = `Server error: ${error.message}. Please try again.`;
+        }
+        
+        alert(errorMessage);
         document.getElementById('progressSection').style.display = 'none';
         document.getElementById('analyzeBtn').disabled = false;
-        clearInterval(progressInterval);
     }
 }
 

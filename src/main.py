@@ -29,6 +29,7 @@ from services.decision_maker_service import DecisionMakerService
 from services.brightdata_service import BrightDataService
 from services.brightdata_linkedin_service import BrightDataLinkedInService
 from services.brightdata_correct_service import BrightDataCorrectService
+from services.ai_recommendation_service import AIRecommendationService
 import logging
 
 # Configure logging
@@ -67,6 +68,7 @@ decision_maker_service = DecisionMakerService()
 brightdata_service = BrightDataService()
 brightdata_linkedin_service = BrightDataLinkedInService()
 brightdata_correct_service = BrightDataCorrectService()
+ai_recommendation_service = AIRecommendationService()
 
 # Mount static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -424,12 +426,51 @@ async def analyze_comprehensive(request: Request, company: CompanyRequest):
                 news_data=news_data
             )
         
-        # 9. Generate outreach strategy
+        # 9. Generate AI-powered recommendations
+        # Prepare company data for AI recommendation service
+        company_analysis_data = {
+            "job_postings": job_data,
+            "news_insights": news_data,
+            "tech_signals": web_data,
+            "linkedin_profile": linkedin_company,
+            "basic_info": hunter_data or clearbit_data or {}
+        }
+        
+        # Generate AI-powered sales recommendations
+        ai_recommendations = await ai_recommendation_service.generate_sales_recommendations(
+            company_name=company.name,
+            ai_readiness_score=scoring_result["overall_score"],
+            component_scores=scoring_result["component_scores"],
+            company_data=company_analysis_data,
+            decision_makers=decision_makers,
+            is_financial=is_financial
+        )
+        
+        # Generate personalized outreach for top decision makers
+        personalized_outreach = []
+        for dm in decision_makers[:3]:  # Top 3 decision makers
+            outreach = await ai_recommendation_service.generate_personalized_outreach(
+                decision_maker=dm,
+                company_name=company.name,
+                ai_readiness_score=scoring_result["overall_score"],
+                key_insights=scoring_result.get("key_strengths", []) + scoring_result.get("improvement_areas", [])
+            )
+            dm["personalized_outreach"] = outreach
+            personalized_outreach.append(outreach)
+        
+        # Combine AI recommendations with existing outreach strategy
         outreach_strategy = decision_maker_service.generate_outreach_strategy(
             decision_makers=decision_makers,
             ai_readiness_score=scoring_result["overall_score"],
             company_name=company.name
         )
+        
+        # Merge AI recommendations into outreach strategy
+        if ai_recommendations:
+            outreach_strategy["ai_recommendations"] = ai_recommendations
+            outreach_strategy["priority"] = ai_recommendations.get("priority_level", "medium")
+            outreach_strategy["estimated_deal_size"] = ai_recommendations.get("estimated_deal_size", "Unknown")
+            outreach_strategy["timeline"] = ai_recommendations.get("timeline", "3-6 months")
         
         # 10. Compile comprehensive response
         company_name = company.name
@@ -467,13 +508,20 @@ async def analyze_comprehensive(request: Request, company: CompanyRequest):
             "recommendations": {
                 "decision_makers": formatted_decision_makers,
                 "sales_approach": outreach_strategy,
-                "key_talking_points": outreach_strategy.get("messaging", ""),
-                "next_steps": [
+                "ai_powered_strategy": ai_recommendations if ai_recommendations else None,
+                "priority_level": ai_recommendations.get("priority_level", "medium") if ai_recommendations else "medium",
+                "estimated_deal_size": ai_recommendations.get("estimated_deal_size", "$500K-$1M") if ai_recommendations else "$500K-$1M",
+                "key_talking_points": ai_recommendations.get("key_talking_points", []) if ai_recommendations else outreach_strategy.get("messaging", "").split("\n"),
+                "recommended_use_cases": ai_recommendations.get("recommended_use_cases", []) if ai_recommendations else [],
+                "objection_handling": ai_recommendations.get("objection_handling", []) if ai_recommendations else [],
+                "next_steps": ai_recommendations.get("next_steps", []) if ai_recommendations else [
                     f"Target {len(formatted_decision_makers)} identified decision makers",
                     f"Use {outreach_strategy.get('approach', 'standard')} approach",
                     f"Timeline: {outreach_strategy.get('timeline', '2-4 weeks')}",
                     "Prepare customized demo focusing on identified use cases"
-                ]
+                ],
+                "competitive_positioning": ai_recommendations.get("competitive_positioning", "") if ai_recommendations else "",
+                "success_metrics": ai_recommendations.get("success_metrics", []) if ai_recommendations else []
             },
             "is_financial_company": is_financial,
             "data_sources": {

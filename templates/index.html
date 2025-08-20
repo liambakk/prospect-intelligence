@@ -57,16 +57,24 @@
 
         <!-- Progress Section -->
         <section id="progressSection" class="analysis-progress" style="display: none;">
-            <div class="progress-card">
-                <div class="progress-header">
-                    <h3 class="progress-title">Analyzing <span id="analyzingCompany"></span></h3>
+            <div class="carousel-container">
+                <div class="carousel-header">
+                    <h3 class="carousel-title">Analyzing <span id="analyzingCompany"></span></h3>
+                </div>
+                
+                <!-- Carousel Viewport -->
+                <div class="carousel-viewport">
+                    <div class="carousel-track" id="carouselTrack">
+                        <!-- Cards will be added dynamically -->
+                    </div>
+                </div>
+                
+                <!-- Progress Indicators -->
+                <div class="carousel-progress">
+                    <div class="progress-dots" id="progressDots">
+                        <!-- Dots will be added dynamically -->
+                    </div>
                     <div class="progress-percentage" id="progressPercentage">0%</div>
-                </div>
-                <div class="progress-track">
-                    <div class="progress-fill" id="progressFill"></div>
-                </div>
-                <div class="progress-steps" id="progressSteps">
-                    <!-- Steps will be added dynamically -->
                 </div>
             </div>
         </section>
@@ -158,7 +166,7 @@
             <!-- Decision Makers & Approach -->
             <div class="strategy-section">
                 <div class="decision-card">
-                    <h3 class="section-title">Key Decision Makers</h3>
+                    <h3 class="section-title">Key Decision Makers (Mock)</h3>
                     <div class="decision-makers-grid" id="decisionMakers">
                         <!-- Populated dynamically -->
                     </div>

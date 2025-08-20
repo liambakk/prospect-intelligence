@@ -175,6 +175,13 @@ class BrightDataCorrectService:
         Returns:
             List of LinkedIn profiles with decision maker information
         """
+        # DISABLED: BrightData API takes too long (3-5+ minutes)
+        # Using mock data for better performance
+        logger.info(f"Using mock decision maker data for {company_name} (BrightData disabled for performance)")
+        return self._get_mock_decision_makers(company_name)
+        
+        # Original code below is disabled to avoid slow BrightData API calls
+        """
         if not titles:
             titles = [
                 "Chief Technology Officer", "CTO",
@@ -440,6 +447,7 @@ class BrightDataCorrectService:
             return self._get_mock_decision_makers(company_name)
         
         return decision_makers[:10]  # Return top 10
+        """
     
     def _is_relevant_profile(self, profile: Dict[str, Any], company_name: str) -> bool:
         """Check if profile is relevant to the company"""
