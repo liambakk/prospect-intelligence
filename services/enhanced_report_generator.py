@@ -485,6 +485,32 @@ class EnhancedPDFReportGenerator:
         ]))
         elements.append(metrics_table)
         
+        elements.append(Spacer(1, 0.4*inch))
+        
+        # Assessment Overview
+        elements.append(Paragraph("<b>Assessment Overview</b>", self.styles['SubHeading']))
+        
+        summary_text = self._generate_executive_summary(company_name, score)
+        elements.append(Paragraph(summary_text, self.styles['BodyText']))
+        
+        elements.append(Spacer(1, 0.3*inch))
+        
+        # Key findings
+        elements.append(Paragraph("<b>Key Findings</b>", self.styles['SubHeading']))
+        
+        findings = self._extract_key_findings(data)
+        for finding in findings[:4]:  # Limit to 4 findings
+            bullet_text = f"• {finding}"
+            elements.append(Paragraph(bullet_text, self.styles['InsightText']))
+        
+        elements.append(Spacer(1, 0.3*inch))
+        
+        # Strategic opportunity
+        elements.append(Paragraph("<b>Strategic Opportunity</b>", self.styles['SubHeading']))
+        
+        opportunity = self._generate_opportunity_text(score, company_name)
+        elements.append(Paragraph(opportunity, self.styles['BodyText']))
+        
         return elements
     
     def _create_score_analysis(self, data: Dict[str, Any]) -> List:
@@ -496,33 +522,6 @@ class EnhancedPDFReportGenerator:
         elements.append(Spacer(1, 0.3*inch))
         
         score = self._extract_score(data.get('ai_readiness_score', 0))
-        company_name = data.get('company_name', 'The company')
-        
-        # Assessment Overview (moved from Executive Summary)
-        elements.append(Paragraph("<b>Assessment Overview</b>", self.styles['SubHeading']))
-        
-        summary_text = self._generate_executive_summary(company_name, score)
-        elements.append(Paragraph(summary_text, self.styles['BodyText']))
-        
-        elements.append(Spacer(1, 0.3*inch))
-        
-        # Key findings (moved from Executive Summary)
-        elements.append(Paragraph("<b>Key Findings</b>", self.styles['SubHeading']))
-        
-        findings = self._extract_key_findings(data)
-        for finding in findings[:4]:  # Limit to 4 findings
-            bullet_text = f"• {finding}"
-            elements.append(Paragraph(bullet_text, self.styles['InsightText']))
-        
-        elements.append(Spacer(1, 0.3*inch))
-        
-        # Strategic opportunity (moved from Executive Summary)
-        elements.append(Paragraph("<b>Strategic Opportunity</b>", self.styles['SubHeading']))
-        
-        opportunity = self._generate_opportunity_text(score, company_name)
-        elements.append(Paragraph(opportunity, self.styles['BodyText']))
-        
-        elements.append(Spacer(1, 0.3*inch))
         
         # Score interpretation
         elements.append(Paragraph("<b>Score Interpretation</b>", self.styles['SubHeading']))
