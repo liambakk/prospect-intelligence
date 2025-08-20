@@ -412,8 +412,21 @@ class EnhancedPDFReportGenerator:
             self.styles['CoverSubtitle']
         ))
         
-        # Date - moved up to fill the space
-        elements.append(Spacer(1, 3*inch))
+        # Add domain if available
+        domain = data.get('company_data', {}).get('basic_info', {}).get('domain', '')
+        if not domain:
+            # Try alternate locations
+            domain = data.get('domain', '') or data.get('company_info', {}).get('domain', '')
+        
+        if domain:
+            elements.append(Spacer(1, 0.2*inch))
+            elements.append(Paragraph(
+                f"<font color='#718096'>{domain}</font>",
+                self.styles['BodyText']
+            ))
+        
+        # Date - adjusted spacing
+        elements.append(Spacer(1, 2.5*inch if domain else 3*inch))
         date_str = datetime.now().strftime("%B %d, %Y")
         elements.append(Paragraph(date_str, self.styles['Footer']))
         
@@ -433,6 +446,13 @@ class EnhancedPDFReportGenerator:
         # Section header
         elements.append(SectionHeader(1, "Executive Summary"))
         elements.append(Spacer(1, 0.3*inch))
+        
+        # Add company domain information
+        domain = data.get('company_data', {}).get('basic_info', {}).get('domain', '')
+        if domain:
+            domain_text = f"<b>Company:</b> {company_name} | <b>Domain:</b> {domain}"
+            elements.append(Paragraph(domain_text, self.styles['BodyText']))
+            elements.append(Spacer(1, 0.2*inch))
         
         # Score gauge and readiness level (moved from cover page)
         score = self._extract_score(data.get('ai_readiness_score', 0))

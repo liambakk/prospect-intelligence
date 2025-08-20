@@ -10,6 +10,7 @@ from src.services.hunter_service import HunterService
 from services.job_scraper import JobScraper
 from services.news_collector import NewsCollector
 from services.website_scraper import WebsiteScraper
+from services.company_resolver import CompanyResolver
 from scoring.readiness_scorer import ReadinessScorer
 from scoring.recommendation_engine import RecommendationEngine
 from config import Config
@@ -34,6 +35,7 @@ hunter_service = HunterService(os.getenv('HUNTER_API_KEY'))
 job_scraper = JobScraper()
 news_collector = NewsCollector(Config.NEWS_API_KEY)
 website_scraper = WebsiteScraper()
+company_resolver = CompanyResolver()
 readiness_scorer = ReadinessScorer()
 recommendation_engine = RecommendationEngine()
 
@@ -46,59 +48,56 @@ def index():
 
 @app.route('/api/company-suggestions', methods=['GET'])
 def get_company_suggestions():
-    """Get company name suggestions for autocomplete"""
-    query = request.args.get('q', '').strip().lower()
+    """Get company name suggestions for autocomplete - now with alias support"""
+    query = request.args.get('q', '').strip()
     
     if len(query) < 2:
         return jsonify({'suggestions': []})
     
-    # Load finance companies data
-    companies_file = os.path.join(app.static_folder, 'data', 'finance_companies.json')
+    # Use company resolver to find similar companies including aliases
+    similar_companies = company_resolver.find_similar_companies(query, limit=10)
     
-    try:
-        with open(companies_file, 'r') as f:
-            companies_data = json.load(f)
-            companies = companies_data.get('companies', [])
-    except (FileNotFoundError, json.JSONDecodeError):
-        # Fallback to hardcoded list if file not found
-        companies = [
-            {"name": "JPMorgan Chase", "type": "Investment Bank", "sector": "Banking"},
-            {"name": "Bank of America", "type": "Commercial Bank", "sector": "Banking"},
-            {"name": "Goldman Sachs", "type": "Investment Bank", "sector": "Investment Banking"},
-            {"name": "Morgan Stanley", "type": "Investment Bank", "sector": "Investment Banking"},
-            {"name": "Wells Fargo", "type": "Commercial Bank", "sector": "Banking"}
-        ]
-    
-    # Filter companies based on query
+    # Format suggestions for the frontend
     suggestions = []
-    for company in companies:
-        company_name_lower = company['name'].lower()
-        # Check if query matches start of name or any word in the name
-        if (company_name_lower.startswith(query) or 
-            any(word.startswith(query) for word in company_name_lower.split())):
-            suggestions.append({
-                'name': company['name'],
+    seen_names = set()  # Avoid duplicates
+    
+    for company in similar_companies:
+        name = company['name']
+        if name not in seen_names:
+            seen_names.add(name)
+            suggestion = {
+                'name': name,
                 'type': company.get('type', 'Financial Services'),
                 'sector': company.get('sector', 'Finance'),
-                'ticker': company.get('ticker')
-            })
+                'ticker': company.get('ticker'),
+                'match_type': company.get('match_type', 'fuzzy')
+            }
             
-            if len(suggestions) >= 10:  # Limit to 10 suggestions
-                break
+            # Add display text to show what matched (e.g., "JPMorgan Chase (JPM)")
+            if company.get('ticker') and query.upper() == company.get('ticker'):
+                suggestion['display'] = f"{name} ({company.get('ticker')})"
+            elif company.get('match_type') == 'alias':
+                suggestion['display'] = name
+                # Show that it matched an alias
+                if query.lower() != name.lower():
+                    suggestion['hint'] = f"Matched: {query}"
+            else:
+                suggestion['display'] = name
+            
+            suggestions.append(suggestion)
     
-    # If no exact matches, try fuzzy matching
-    if not suggestions:
-        for company in companies:
-            if query in company['name'].lower():
-                suggestions.append({
-                    'name': company['name'],
-                    'type': company.get('type', 'Financial Services'),
-                    'sector': company.get('sector', 'Finance'),
-                    'ticker': company.get('ticker')
-                })
-                
-                if len(suggestions) >= 10:
-                    break
+    # If still no suggestions and query looks like a ticker, try ticker search
+    if not suggestions and len(query) <= 5 and query.isalpha():
+        ticker_result = company_resolver.search_by_ticker(query)
+        if ticker_result:
+            suggestions.append({
+                'name': ticker_result['canonical'],
+                'type': ticker_result.get('type', 'Financial Services'),
+                'sector': ticker_result.get('sector', 'Finance'),
+                'ticker': ticker_result.get('ticker'),
+                'display': f"{ticker_result['canonical']} ({ticker_result.get('ticker')})",
+                'match_type': 'ticker'
+            })
     
     return jsonify({'suggestions': suggestions})
 
@@ -167,12 +166,20 @@ def analyze_company():
             'steps': []
         }
         
-        # Step 1: Company Enrichment using Hunter.io
-        response['steps'].append({'step': 'Fetching company information', 'status': 'complete'})
-        # Convert company name to domain for Hunter.io
-        domain = f"{company_name.lower().replace(' ', '').replace(',', '').replace('.', '')}.com"
+        # Step 1: Resolve company name and get domain
+        resolved_company = company_resolver.resolve_company(company_name)
+        canonical_name = resolved_company.get('canonical', company_name)
+        domain = resolved_company.get('domain')
+        ticker = resolved_company.get('ticker')
         
-        # Run async Hunter.io search
+        # If no domain found, try to construct one
+        if not domain:
+            domain = f"{company_name.lower().replace(' ', '').replace(',', '').replace('.', '')}.com"
+        
+        # Step 2: Company Enrichment using Hunter.io
+        response['steps'].append({'step': 'Fetching company information', 'status': 'complete'})
+        
+        # Run async Hunter.io search with resolved domain
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         hunter_data = loop.run_until_complete(hunter_service.search_domain(domain))
@@ -181,13 +188,14 @@ def analyze_company():
         # Convert Hunter data to expected format
         if hunter_data:
             company_info = {
-                'name': hunter_data.company_name or company_name,
+                'name': hunter_data.company_name or canonical_name,
                 'domain': hunter_data.domain or domain,
                 'industry': hunter_data.company_industry or 'Financial Services',
                 'employeeCount': 0,  # Hunter doesn't provide this directly
-                'description': f"{hunter_data.company_name or company_name} - {hunter_data.company_type or 'Company'}",
+                'description': f"{hunter_data.company_name or canonical_name} - {hunter_data.company_type or 'Company'}",
                 'tags': hunter_data.technologies or [],
                 'techStack': hunter_data.technologies or [],
+                'ticker': ticker,  # Add ticker from resolver
                 'location': {
                     'city': hunter_data.city or 'New York',
                     'state': hunter_data.state or 'NY',
@@ -203,13 +211,14 @@ def analyze_company():
         else:
             # Fallback if Hunter.io fails
             company_info = {
-                'name': company_name,
+                'name': canonical_name,
                 'domain': domain,
                 'industry': 'Financial Services',
                 'employeeCount': 0,
-                'description': f"{company_name} company information",
+                'description': f"{canonical_name} company information",
                 'tags': [],
                 'techStack': [],
+                'ticker': ticker,  # Add ticker from resolver
                 'location': {
                     'city': 'New York',
                     'state': 'NY',
@@ -217,13 +226,13 @@ def analyze_company():
                 }
             }
         
-        # Step 2: Job Analysis
+        # Step 3: Job Analysis (use canonical name for better search results)
         response['steps'].append({'step': 'Analyzing job postings', 'status': 'complete'})
-        job_analysis = job_scraper.analyze_job_postings(company_name)
+        job_analysis = job_scraper.analyze_job_postings(canonical_name)
         
-        # Step 3: News Analysis
+        # Step 4: News Analysis (use canonical name for better search results)
         response['steps'].append({'step': 'Collecting recent news', 'status': 'complete'})
-        news_analysis = news_collector.get_recent_news(company_name)
+        news_analysis = news_collector.get_recent_news(canonical_name)
         
         # Step 4: Website Analysis
         response['steps'].append({'step': 'Analyzing company website', 'status': 'complete'})
@@ -285,8 +294,10 @@ def generate_report():
             data = request_data
         else:
             # Need to re-analyze the company
-            # Run the analysis to get fresh data
-            domain = request_data.get('domain', f"{company_name.lower().replace(' ', '').replace(',', '').replace('.', '')}.com")
+            # Resolve company name first
+            resolved_company = company_resolver.resolve_company(company_name)
+            canonical_name = resolved_company.get('canonical', company_name)
+            domain = resolved_company.get('domain') or request_data.get('domain', f"{company_name.lower().replace(' ', '').replace(',', '').replace('.', '')}.com")
             
             # Get Hunter.io data
             loop = asyncio.new_event_loop()

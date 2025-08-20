@@ -255,8 +255,13 @@ function displayResults(data) {
     document.getElementById('resultsSection').style.display = 'block';
     document.getElementById('analyzeBtn').disabled = false;
     
-    // Company name and date
+    // Company name, domain, and date
     document.getElementById('resultCompanyName').textContent = data.company_name;
+    
+    // Display the domain used for analysis
+    const domain = data.domain || data.company_info?.domain || '-';
+    document.getElementById('domainValue').textContent = domain;
+    
     document.getElementById('analysisDate').textContent = new Date().toLocaleDateString('en-US', { 
         month: 'long', 
         day: 'numeric', 
@@ -536,15 +541,22 @@ function showAutocomplete(suggestions) {
     
     let html = '';
     suggestions.forEach((company, index) => {
-        const ticker = company.ticker ? ` (${company.ticker})` : '';
+        // Use display text if available, otherwise use name
+        const displayName = company.display || company.name;
+        const ticker = company.ticker && !company.display ? ` (${company.ticker})` : '';
         const sector = company.sector ? ` • ${company.sector}` : '';
+        
+        // Add hint if this matched an alias
+        const hint = company.hint ? `<div class="autocomplete-hint">${company.hint}</div>` : '';
+        
         html += `
             <div class="autocomplete-item ${index === selectedSuggestionIndex ? 'selected' : ''}" 
                  data-index="${index}"
                  data-name="${company.name}">
                 <div class="autocomplete-company">
-                    <span class="autocomplete-name">${company.name}${ticker}</span>
+                    <span class="autocomplete-name">${displayName}${ticker}</span>
                     <span class="autocomplete-details">${company.type}${sector}</span>
+                    ${hint}
                 </div>
             </div>
         `;

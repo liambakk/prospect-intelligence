@@ -1,0 +1,458 @@
+{
+  "mappings": {
+    "jpmorgan": {
+      "canonical": "JPMorgan Chase",
+      "domain": "jpmorganchase.com",
+      "ticker": "JPM",
+      "aliases": ["JPMorgan", "JP Morgan", "JPM", "Chase", "JPMorgan Chase & Co", "JPMC"]
+    },
+    "jp morgan": {
+      "canonical": "JPMorgan Chase",
+      "domain": "jpmorganchase.com",
+      "ticker": "JPM"
+    },
+    "jpm": {
+      "canonical": "JPMorgan Chase",
+      "domain": "jpmorganchase.com",
+      "ticker": "JPM"
+    },
+    "jpmc": {
+      "canonical": "JPMorgan Chase",
+      "domain": "jpmorganchase.com",
+      "ticker": "JPM"
+    },
+    "chase": {
+      "canonical": "JPMorgan Chase",
+      "domain": "jpmorganchase.com",
+      "ticker": "JPM"
+    },
+    "bofa": {
+      "canonical": "Bank of America",
+      "domain": "bankofamerica.com",
+      "ticker": "BAC",
+      "aliases": ["BofA", "BoA", "Bank of America", "BAC"]
+    },
+    "boa": {
+      "canonical": "Bank of America",
+      "domain": "bankofamerica.com",
+      "ticker": "BAC"
+    },
+    "bac": {
+      "canonical": "Bank of America",
+      "domain": "bankofamerica.com",
+      "ticker": "BAC"
+    },
+    "bank of america": {
+      "canonical": "Bank of America",
+      "domain": "bankofamerica.com",
+      "ticker": "BAC"
+    },
+    "gs": {
+      "canonical": "Goldman Sachs",
+      "domain": "goldmansachs.com",
+      "ticker": "GS",
+      "aliases": ["GS", "Goldman", "Goldman Sachs Group"]
+    },
+    "goldman": {
+      "canonical": "Goldman Sachs",
+      "domain": "goldmansachs.com",
+      "ticker": "GS"
+    },
+    "goldman sachs": {
+      "canonical": "Goldman Sachs",
+      "domain": "goldmansachs.com",
+      "ticker": "GS"
+    },
+    "ms": {
+      "canonical": "Morgan Stanley",
+      "domain": "morganstanley.com",
+      "ticker": "MS",
+      "aliases": ["MS", "Morgan Stanley", "MorganStanley"]
+    },
+    "morgan stanley": {
+      "canonical": "Morgan Stanley",
+      "domain": "morganstanley.com",
+      "ticker": "MS"
+    },
+    "wells": {
+      "canonical": "Wells Fargo",
+      "domain": "wellsfargo.com",
+      "ticker": "WFC",
+      "aliases": ["Wells", "Wells Fargo", "WFC"]
+    },
+    "wells fargo": {
+      "canonical": "Wells Fargo",
+      "domain": "wellsfargo.com",
+      "ticker": "WFC"
+    },
+    "wfc": {
+      "canonical": "Wells Fargo",
+      "domain": "wellsfargo.com",
+      "ticker": "WFC"
+    },
+    "citi": {
+      "canonical": "Citigroup",
+      "domain": "citigroup.com",
+      "ticker": "C",
+      "aliases": ["Citi", "Citigroup", "Citibank", "C"]
+    },
+    "citigroup": {
+      "canonical": "Citigroup",
+      "domain": "citigroup.com",
+      "ticker": "C"
+    },
+    "citibank": {
+      "canonical": "Citigroup",
+      "domain": "citigroup.com",
+      "ticker": "C"
+    },
+    "blackrock": {
+      "canonical": "BlackRock",
+      "domain": "blackrock.com",
+      "ticker": "BLK",
+      "aliases": ["BlackRock", "BLK", "Black Rock"]
+    },
+    "blk": {
+      "canonical": "BlackRock",
+      "domain": "blackrock.com",
+      "ticker": "BLK"
+    },
+    "gcv": {
+      "canonical": "General Catalyst",
+      "domain": "generalcatalyst.com",
+      "ticker": null,
+      "aliases": ["GCV", "General Catalyst", "GC"]
+    },
+    "general catalyst": {
+      "canonical": "General Catalyst",
+      "domain": "generalcatalyst.com",
+      "ticker": null
+    },
+    "gc": {
+      "canonical": "General Catalyst",
+      "domain": "generalcatalyst.com",
+      "ticker": null
+    },
+    "amex": {
+      "canonical": "American Express",
+      "domain": "americanexpress.com",
+      "ticker": "AXP",
+      "aliases": ["AmEx", "American Express", "AXP", "Amex"]
+    },
+    "american express": {
+      "canonical": "American Express",
+      "domain": "americanexpress.com",
+      "ticker": "AXP"
+    },
+    "axp": {
+      "canonical": "American Express",
+      "domain": "americanexpress.com",
+      "ticker": "AXP"
+    },
+    "capital one": {
+      "canonical": "Capital One",
+      "domain": "capitalone.com",
+      "ticker": "COF"
+    },
+    "cof": {
+      "canonical": "Capital One",
+      "domain": "capitalone.com",
+      "ticker": "COF"
+    },
+    "schwab": {
+      "canonical": "Charles Schwab",
+      "domain": "schwab.com",
+      "ticker": "SCHW",
+      "aliases": ["Schwab", "Charles Schwab", "SCHW"]
+    },
+    "charles schwab": {
+      "canonical": "Charles Schwab",
+      "domain": "schwab.com",
+      "ticker": "SCHW"
+    },
+    "schw": {
+      "canonical": "Charles Schwab",
+      "domain": "schwab.com",
+      "ticker": "SCHW"
+    },
+    "fidelity": {
+      "canonical": "Fidelity Investments",
+      "domain": "fidelity.com",
+      "ticker": null,
+      "aliases": ["Fidelity", "Fidelity Investments"]
+    },
+    "fidelity investments": {
+      "canonical": "Fidelity Investments",
+      "domain": "fidelity.com",
+      "ticker": null
+    },
+    "vanguard": {
+      "canonical": "Vanguard",
+      "domain": "vanguard.com",
+      "ticker": null
+    },
+    "state street": {
+      "canonical": "State Street",
+      "domain": "statestreet.com",
+      "ticker": "STT"
+    },
+    "stt": {
+      "canonical": "State Street",
+      "domain": "statestreet.com",
+      "ticker": "STT"
+    },
+    "pnc": {
+      "canonical": "PNC Financial Services",
+      "domain": "pnc.com",
+      "ticker": "PNC"
+    },
+    "pnc financial": {
+      "canonical": "PNC Financial Services",
+      "domain": "pnc.com",
+      "ticker": "PNC"
+    },
+    "us bank": {
+      "canonical": "U.S. Bancorp",
+      "domain": "usbank.com",
+      "ticker": "USB"
+    },
+    "us bancorp": {
+      "canonical": "U.S. Bancorp",
+      "domain": "usbank.com",
+      "ticker": "USB"
+    },
+    "usb": {
+      "canonical": "U.S. Bancorp",
+      "domain": "usbank.com",
+      "ticker": "USB"
+    },
+    "td": {
+      "canonical": "TD Bank",
+      "domain": "td.com",
+      "ticker": "TD"
+    },
+    "td bank": {
+      "canonical": "TD Bank",
+      "domain": "td.com",
+      "ticker": "TD"
+    },
+    "bny": {
+      "canonical": "Bank of New York Mellon",
+      "domain": "bnymellon.com",
+      "ticker": "BK",
+      "aliases": ["BNY", "BNY Mellon", "Bank of New York", "BK"]
+    },
+    "bny mellon": {
+      "canonical": "Bank of New York Mellon",
+      "domain": "bnymellon.com",
+      "ticker": "BK"
+    },
+    "bank of new york": {
+      "canonical": "Bank of New York Mellon",
+      "domain": "bnymellon.com",
+      "ticker": "BK"
+    },
+    "bk": {
+      "canonical": "Bank of New York Mellon",
+      "domain": "bnymellon.com",
+      "ticker": "BK"
+    },
+    "hsbc": {
+      "canonical": "HSBC",
+      "domain": "hsbc.com",
+      "ticker": "HSBC"
+    },
+    "barclays": {
+      "canonical": "Barclays",
+      "domain": "barclays.com",
+      "ticker": "BCS"
+    },
+    "bcs": {
+      "canonical": "Barclays",
+      "domain": "barclays.com",
+      "ticker": "BCS"
+    },
+    "ubs": {
+      "canonical": "UBS",
+      "domain": "ubs.com",
+      "ticker": "UBS"
+    },
+    "deutsche": {
+      "canonical": "Deutsche Bank",
+      "domain": "db.com",
+      "ticker": "DB",
+      "aliases": ["Deutsche", "Deutsche Bank", "DB"]
+    },
+    "deutsche bank": {
+      "canonical": "Deutsche Bank",
+      "domain": "db.com",
+      "ticker": "DB"
+    },
+    "db": {
+      "canonical": "Deutsche Bank",
+      "domain": "db.com",
+      "ticker": "DB"
+    },
+    "bnp": {
+      "canonical": "BNP Paribas",
+      "domain": "bnpparibas.com",
+      "ticker": "BNP"
+    },
+    "bnp paribas": {
+      "canonical": "BNP Paribas",
+      "domain": "bnpparibas.com",
+      "ticker": "BNP"
+    },
+    "santander": {
+      "canonical": "Santander",
+      "domain": "santander.com",
+      "ticker": "SAN"
+    },
+    "san": {
+      "canonical": "Santander",
+      "domain": "santander.com",
+      "ticker": "SAN"
+    },
+    "ing": {
+      "canonical": "ING Group",
+      "domain": "ing.com",
+      "ticker": "ING"
+    },
+    "ing group": {
+      "canonical": "ING Group",
+      "domain": "ing.com",
+      "ticker": "ING"
+    },
+    "rbc": {
+      "canonical": "Royal Bank of Canada",
+      "domain": "rbc.com",
+      "ticker": "RY",
+      "aliases": ["RBC", "Royal Bank", "RY"]
+    },
+    "royal bank": {
+      "canonical": "Royal Bank of Canada",
+      "domain": "rbc.com",
+      "ticker": "RY"
+    },
+    "royal bank of canada": {
+      "canonical": "Royal Bank of Canada",
+      "domain": "rbc.com",
+      "ticker": "RY"
+    },
+    "ry": {
+      "canonical": "Royal Bank of Canada",
+      "domain": "rbc.com",
+      "ticker": "RY"
+    },
+    "scotiabank": {
+      "canonical": "Scotiabank",
+      "domain": "scotiabank.com",
+      "ticker": "BNS"
+    },
+    "bns": {
+      "canonical": "Scotiabank",
+      "domain": "scotiabank.com",
+      "ticker": "BNS"
+    },
+    "jefferies": {
+      "canonical": "Jefferies",
+      "domain": "jefferies.com",
+      "ticker": "JEF"
+    },
+    "jef": {
+      "canonical": "Jefferies",
+      "domain": "jefferies.com",
+      "ticker": "JEF"
+    },
+    "raymond james": {
+      "canonical": "Raymond James",
+      "domain": "raymondjames.com",
+      "ticker": "RJF"
+    },
+    "rjf": {
+      "canonical": "Raymond James",
+      "domain": "raymondjames.com",
+      "ticker": "RJF"
+    },
+    "kkr": {
+      "canonical": "KKR",
+      "domain": "kkr.com",
+      "ticker": "KKR"
+    },
+    "blackstone": {
+      "canonical": "Blackstone",
+      "domain": "blackstone.com",
+      "ticker": "BX"
+    },
+    "bx": {
+      "canonical": "Blackstone",
+      "domain": "blackstone.com",
+      "ticker": "BX"
+    },
+    "apollo": {
+      "canonical": "Apollo Global Management",
+      "domain": "apollo.com",
+      "ticker": "APO"
+    },
+    "apollo global": {
+      "canonical": "Apollo Global Management",
+      "domain": "apollo.com",
+      "ticker": "APO"
+    },
+    "apo": {
+      "canonical": "Apollo Global Management",
+      "domain": "apollo.com",
+      "ticker": "APO"
+    },
+    "carlyle": {
+      "canonical": "Carlyle Group",
+      "domain": "carlyle.com",
+      "ticker": "CG"
+    },
+    "carlyle group": {
+      "canonical": "Carlyle Group",
+      "domain": "carlyle.com",
+      "ticker": "CG"
+    },
+    "cg": {
+      "canonical": "Carlyle Group",
+      "domain": "carlyle.com",
+      "ticker": "CG"
+    },
+    "tpg": {
+      "canonical": "TPG",
+      "domain": "tpg.com",
+      "ticker": "TPG"
+    },
+    "bridgewater": {
+      "canonical": "Bridgewater Associates",
+      "domain": "bridgewater.com",
+      "ticker": null
+    },
+    "bridgewater associates": {
+      "canonical": "Bridgewater Associates",
+      "domain": "bridgewater.com",
+      "ticker": null
+    },
+    "citadel": {
+      "canonical": "Citadel",
+      "domain": "citadel.com",
+      "ticker": null
+    },
+    "two sigma": {
+      "canonical": "Two Sigma",
+      "domain": "twosigma.com",
+      "ticker": null
+    },
+    "de shaw": {
+      "canonical": "D.E. Shaw",
+      "domain": "deshaw.com",
+      "ticker": null
+    },
+    "d.e. shaw": {
+      "canonical": "D.E. Shaw",
+      "domain": "deshaw.com",
+      "ticker": null
+    }
+  }
+}
