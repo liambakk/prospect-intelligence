@@ -263,9 +263,6 @@ def generate_report():
             }
         
         # Import enhanced PDF generator
-        import sys
-        if 'src' not in sys.path:
-            sys.path.append('src')
         from services.enhanced_report_generator import EnhancedPDFReportGenerator
         import os
         import shutil
