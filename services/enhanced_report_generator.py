@@ -203,13 +203,13 @@ class EnhancedPDFReportGenerator:
         self.output_dir.mkdir(parents=True, exist_ok=True)
         self.styles = self._create_custom_styles()
     
-    def _create_custom_styles(self) -> Dict[str, ParagraphStyle]:
+    def _create_custom_styles(self):
         """Create custom paragraph styles matching ModelML design"""
-        styles = getSampleStyleSheet()
-        custom_styles = {}
+        base_styles = getSampleStyleSheet()
+        styles = {}
         
         # Cover title
-        custom_styles['CoverTitle'] = ParagraphStyle(
+        styles['CoverTitle'] = ParagraphStyle(
             'CoverTitle',
             fontSize=36,
             textColor=self.COLORS['primary_dark'],
@@ -220,7 +220,7 @@ class EnhancedPDFReportGenerator:
         )
         
         # Cover subtitle
-        custom_styles['CoverSubtitle'] = ParagraphStyle(
+        styles['CoverSubtitle'] = ParagraphStyle(
             'CoverSubtitle',
             fontSize=18,
             textColor=self.COLORS['text_secondary'],
@@ -230,7 +230,7 @@ class EnhancedPDFReportGenerator:
         )
         
         # Section heading
-        custom_styles['SectionHeading'] = ParagraphStyle(
+        styles['SectionHeading'] = ParagraphStyle(
             'SectionHeading',
             fontSize=22,
             textColor=self.COLORS['primary_dark'],
@@ -241,7 +241,7 @@ class EnhancedPDFReportGenerator:
         )
         
         # Subsection heading
-        custom_styles['SubHeading'] = ParagraphStyle(
+        styles['SubHeading'] = ParagraphStyle(
             'SubHeading',
             fontSize=16,
             textColor=self.COLORS['secondary_dark'],
@@ -252,7 +252,7 @@ class EnhancedPDFReportGenerator:
         )
         
         # Body text
-        custom_styles['BodyText'] = ParagraphStyle(
+        styles['BodyText'] = ParagraphStyle(
             'BodyText',
             fontSize=11,
             textColor=self.COLORS['text_primary'],
@@ -263,7 +263,7 @@ class EnhancedPDFReportGenerator:
         )
         
         # Metric label
-        custom_styles['MetricLabel'] = ParagraphStyle(
+        styles['MetricLabel'] = ParagraphStyle(
             'MetricLabel',
             fontSize=10,
             textColor=self.COLORS['text_muted'],
@@ -272,7 +272,7 @@ class EnhancedPDFReportGenerator:
         )
         
         # Metric value
-        custom_styles['MetricValue'] = ParagraphStyle(
+        styles['MetricValue'] = ParagraphStyle(
             'MetricValue',
             fontSize=28,
             textColor=self.COLORS['primary_dark'],
@@ -281,7 +281,7 @@ class EnhancedPDFReportGenerator:
         )
         
         # Insight text
-        custom_styles['InsightText'] = ParagraphStyle(
+        styles['InsightText'] = ParagraphStyle(
             'InsightText',
             fontSize=11,
             textColor=self.COLORS['text_secondary'],
@@ -293,7 +293,7 @@ class EnhancedPDFReportGenerator:
         )
         
         # Footer
-        custom_styles['Footer'] = ParagraphStyle(
+        styles['Footer'] = ParagraphStyle(
             'Footer',
             fontSize=9,
             textColor=self.COLORS['text_muted'],
@@ -301,7 +301,11 @@ class EnhancedPDFReportGenerator:
             fontName='Helvetica'
         )
         
-        return {**styles, **custom_styles}
+        # Add base styles
+        for name in base_styles.byName:
+            styles[name] = base_styles[name]
+        
+        return styles
     
     def generate_report(
         self,
