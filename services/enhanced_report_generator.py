@@ -412,6 +412,9 @@ class EnhancedPDFReportGenerator:
         
         # Score gauge
         score = data.get('ai_readiness_score', 0)
+        # Ensure score is a number, not a dict
+        if isinstance(score, dict):
+            score = score.get('total_score', 0)
         gauge = ScoreGauge(score, width=250, height=250)
         elements.append(gauge)
         elements.append(Spacer(1, 0.3*inch))
@@ -464,6 +467,9 @@ class EnhancedPDFReportGenerator:
         
         # Score metric
         score = data.get('ai_readiness_score', 0)
+        # Ensure score is a number, not a dict
+        if isinstance(score, dict):
+            score = score.get('total_score', 0)
         score_html = f"""
         <para align="center">
             <font size="24" color="{self._get_score_color(score).hexval()}"><b>{score}</b></font><br/>
@@ -585,6 +591,9 @@ class EnhancedPDFReportGenerator:
         
         # Score interpretation
         score = data.get('ai_readiness_score', 0)
+        # Ensure score is a number, not a dict
+        if isinstance(score, dict):
+            score = score.get('total_score', 0)
         interpretation = self._get_score_interpretation(score, data.get('company_name', 'The company'))
         
         elements.append(Paragraph(interpretation, self.styles['BodyText']))

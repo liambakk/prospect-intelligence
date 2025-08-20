@@ -283,12 +283,19 @@ def generate_report():
         pdf_gen = EnhancedPDFReportGenerator(output_dir=output_dir)
         
         # Ensure data has the correct structure for enhanced generator
+        # Extract the numeric score from readiness_score if it's a dict
+        readiness_score_value = data.get('readiness_score', {})
+        if isinstance(readiness_score_value, dict):
+            ai_score = readiness_score_value.get('total_score', 0)
+        else:
+            ai_score = data.get('ai_readiness_score', 0)
+        
         enhanced_data = {
             'company_name': data.get('company_name', company_name),
-            'ai_readiness_score': data.get('readiness_score', data.get('ai_readiness_score', 0)),
-            'readiness_category': data.get('readiness_category', 'Assessment Pending'),
+            'ai_readiness_score': ai_score,
+            'readiness_category': data.get('readiness_category', readiness_score_value.get('readiness_level', 'Assessment Pending') if isinstance(readiness_score_value, dict) else 'Assessment Pending'),
             'confidence': data.get('confidence', 0.85),
-            'component_scores': data.get('component_scores', {}),
+            'component_scores': data.get('component_scores', readiness_score_value.get('component_scores', {}) if isinstance(readiness_score_value, dict) else {}),
             'data_sources': data.get('data_sources', {}),
             'company_data': data.get('company_data', {}),
             'is_financial_company': data.get('is_financial_company', False),
