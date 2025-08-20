@@ -248,7 +248,7 @@ class JobPostingService:
             recent_job_titles.append({
                 "title": job.get("job_title"),
                 "employer": job.get("employer_name"),
-                "location": job.get("job_city", "") + ", " + job.get("job_state", ""),
+                "location": f"{job.get('job_city') or ''}, {job.get('job_state') or ''}".strip(", "),
                 "posted_date": job.get("job_posted_at_datetime_utc"),
                 "is_ai_ml": job in ai_ml_jobs
             })

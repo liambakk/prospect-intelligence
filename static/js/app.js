@@ -22,6 +22,12 @@ async function analyzeCompany() {
     document.getElementById('analyzingCompany').textContent = companyName;
     document.getElementById('analyzeBtn').disabled = true;
     
+    // Add loading class to carousel container for animation
+    const carouselContainer = document.querySelector('.carousel-container');
+    if (carouselContainer) {
+        carouselContainer.classList.add('loading');
+    }
+    
     // Reset progress
     const carouselTrack = document.getElementById('carouselTrack');
     const progressDots = document.getElementById('progressDots');
@@ -182,6 +188,12 @@ async function analyzeCompany() {
         // Stop progress animation
         clearInterval(progressInterval);
         
+        // Remove loading class from carousel container
+        const carouselContainer = document.querySelector('.carousel-container');
+        if (carouselContainer) {
+            carouselContainer.classList.remove('loading');
+        }
+        
         // Complete remaining steps quickly
         const completeRemainingSteps = () => {
             if (currentStep < steps.length) {
@@ -207,6 +219,12 @@ async function analyzeCompany() {
     } catch (error) {
         console.error('Error:', error);
         clearInterval(progressInterval);
+        
+        // Remove loading class from carousel container
+        const carouselContainer = document.querySelector('.carousel-container');
+        if (carouselContainer) {
+            carouselContainer.classList.remove('loading');
+        }
         
         // More specific error messages
         let errorMessage = 'An error occurred while analyzing the company.';

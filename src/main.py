@@ -70,6 +70,49 @@ brightdata_linkedin_service = BrightDataLinkedInService()
 brightdata_correct_service = BrightDataCorrectService()
 ai_recommendation_service = AIRecommendationService()
 
+# Log active data sources at startup
+logging.info("=" * 60)
+logging.info("PROSPECT INTELLIGENCE - DATA SOURCE STATUS")
+logging.info("=" * 60)
+
+# Check Hunter.io
+if os.getenv("HUNTER_API_KEY") and os.getenv("HUNTER_API_KEY") != "your_hunter_api_key_here":
+    logging.info("✅ Hunter.io API: Active (Real company data)")
+else:
+    logging.info("⚠️  Hunter.io API: Not configured (will use fallback)")
+
+# Check Clearbit
+if os.getenv("CLEARBIT_API_KEY") and os.getenv("CLEARBIT_API_KEY") != "your_clearbit_api_key_here":
+    logging.info("✅ Clearbit API: Active (Real company data)")
+else:
+    logging.info("⚠️  Clearbit API: Not configured (optional)")
+
+# Check NewsAPI
+if os.getenv("NEWS_API_KEY") and os.getenv("NEWS_API_KEY") != "your_newsapi_key_here":
+    logging.info("✅ NewsAPI: Active (Real news articles)")
+else:
+    logging.info("❌ NewsAPI: Not configured (required)")
+
+# Check RapidAPI/JSearch
+if os.getenv("RAPIDAPI_KEY") and os.getenv("RAPIDAPI_KEY") != "your_rapidapi_key_here":
+    logging.info("✅ RapidAPI/JSearch: Active (Real job postings)")
+else:
+    logging.info("❌ RapidAPI: Not configured (required)")
+
+# Check OpenAI
+if os.getenv("OPENAI_API_KEY") and os.getenv("OPENAI_API_KEY") != "your_openai_api_key_here":
+    logging.info("✅ OpenAI API: Active (AI-powered recommendations)")
+else:
+    logging.info("⚠️  OpenAI API: Not configured (will use templates)")
+
+# Web scraping is always available
+logging.info("✅ Web Scraping: Active (Real website data)")
+
+# BrightData is intentionally disabled
+logging.info("ℹ️  BrightData: DISABLED - Using mock data (for performance)")
+
+logging.info("=" * 60)
+
 # Mount static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
@@ -526,9 +569,9 @@ async def analyze_comprehensive(request: Request, company: CompanyRequest):
             "is_financial_company": is_financial,
             "data_sources": {
                 "hunter_io": hunter_data is not None,
-                "web_scraping": web_data is not None and web_data.get("ai_mentions_count", 0) > 0,
-                "job_postings": job_data is not None and job_data.get("total_jobs_found", 0) > 0,
-                "news_articles": news_data is not None and news_data.get("articles_processed", 0) > 0,
+                "web_scraping": web_data is not None,
+                "job_postings": job_data is not None,
+                "news_articles": news_data is not None,
                 "clearbit": clearbit_data is not None,
                 "linkedin": linkedin_company is not None,
                 "brightdata": len(brightdata_decision_makers) > 0
