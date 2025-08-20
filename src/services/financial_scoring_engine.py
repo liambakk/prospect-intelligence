@@ -803,7 +803,7 @@ class FinancialAIReadinessScoringEngine(AIReadinessScoringEngine):
         financial_indicators = ["bank", "capital", "financial", "investment",
                                "asset", "wealth", "securities", "insurance",
                                "jpmorgan", "goldman", "citi", "wells fargo",
-                               "morgan stanley", "credit", "fidelity"]
+                               "morgan stanley", "credit", "fidelity", "intesa", "sanpaolo"]
         if any(indicator in name_lower for indicator in financial_indicators):
             return True
         
