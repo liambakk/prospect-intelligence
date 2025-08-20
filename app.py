@@ -262,11 +262,48 @@ def generate_report():
                 'timestamp': datetime.now().isoformat()
             }
         
-        # Import PDF generator
-        from reports.pdf_generator import PDFGenerator
+        # Import enhanced PDF generator
+        import sys
+        if 'src' not in sys.path:
+            sys.path.append('src')
+        from services.enhanced_report_generator import EnhancedPDFReportGenerator
+        import os
+        import shutil
         
-        pdf_gen = PDFGenerator()
-        pdf_path = pdf_gen.generate_report(data)
+        # Use /tmp directory on Vercel and copy logo
+        if os.environ.get('VERCEL') or os.environ.get('AWS_LAMBDA_FUNCTION_NAME'):
+            output_dir = "/tmp/reports"
+            
+            # Copy logo to /tmp for Vercel if it doesn't exist
+            if not os.path.exists("/tmp/modelml.png"):
+                logo_source = os.path.join(os.path.dirname(__file__), "static", "modelml.png")
+                if os.path.exists(logo_source):
+                    shutil.copy(logo_source, "/tmp/modelml.png")
+        else:
+            output_dir = "reports"
+        
+        # Create enhanced PDF generator
+        pdf_gen = EnhancedPDFReportGenerator(output_dir=output_dir)
+        
+        # Ensure data has the correct structure for enhanced generator
+        enhanced_data = {
+            'company_name': data.get('company_name', company_name),
+            'ai_readiness_score': data.get('readiness_score', data.get('ai_readiness_score', 0)),
+            'readiness_category': data.get('readiness_category', 'Assessment Pending'),
+            'confidence': data.get('confidence', 0.85),
+            'component_scores': data.get('component_scores', {}),
+            'data_sources': data.get('data_sources', {}),
+            'company_data': data.get('company_data', {}),
+            'is_financial_company': data.get('is_financial_company', False),
+            'recommendations': data.get('recommendations', {}),
+            'news_analysis': data.get('news_analysis', {}),
+            'decision_makers': data.get('decision_makers', [])
+        }
+        
+        pdf_path = pdf_gen.generate_report(
+            company_name=enhanced_data['company_name'],
+            ai_readiness_data=enhanced_data
+        )
         
         return send_file(pdf_path, as_attachment=True, 
                         download_name=f"{company_name}_AI_Readiness_Report.pdf")
