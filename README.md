@@ -6,6 +6,14 @@ An AI-powered sales intelligence platform that analyzes companies' AI readiness 
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-green.svg)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 
+## 🌐 Live Demo
+
+**Try it now:** https://prospect-intelligence.vercel.app/
+
+No installation required - the application is deployed and ready to use!
+
+![Prospect Intelligence Demo](preview.gif)
+
 ## 🚀 Features
 
 - **AI Readiness Scoring**: Analyzes companies on a 0-100 scale based on multiple data points
@@ -129,7 +137,8 @@ uvicorn src.main:app --host 0.0.0.0 --port 3000
 ### 6. Access the Application
 
 Open your browser and navigate to:
-- **Web Interface**: http://localhost:8000
+- **Live Demo**: https://prospect-intelligence.vercel.app/ (no setup required)
+- **Local Web Interface**: http://localhost:8000
 - **API Documentation**: http://localhost:8000/docs
 - **Alternative API Docs**: http://localhost:8000/redoc
 
@@ -137,7 +146,7 @@ Open your browser and navigate to:
 
 ### Web Interface (Recommended)
 
-1. **Open** http://localhost:8000 in your browser
+1. **Open** https://prospect-intelligence.vercel.app/ (or http://localhost:8000 for local)
 2. **Type** a company name (autocomplete helps after 2 characters)
 3. **Select** from suggestions or press Enter
 4. **Watch** the animated progress (10-20 seconds)
@@ -347,6 +356,12 @@ MIT License - see LICENSE file for details
 ---
 
 **Quick Start Summary:**
+
+**Option 1: Use Live Demo (Instant)**
+- Visit: https://prospect-intelligence.vercel.app/
+- No setup required!
+
+**Option 2: Run Locally (10 minutes)**
 1. Clone repo: `git clone https://github.com/liambakk/prospect-intelligence.git`
 2. Setup venv: `python3 -m venv venv && source venv/bin/activate`
 3. Install: `pip install -r requirements.txt`
@@ -354,4 +369,4 @@ MIT License - see LICENSE file for details
 5. Run: `python src/main.py`
 6. Open: http://localhost:8000
 
-**Total Setup Time: ~10 minutes** with API key registration
+**Total Setup Time: Instant (live demo) or ~10 minutes (local) with API key registration

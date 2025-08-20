@@ -2,18 +2,36 @@
 let currentAnalysisData = null;
 let autocompleteTimeout = null;
 let selectedSuggestionIndex = -1;
+let validatedCompanies = new Set(); // Cache of validated company names
+let isValidCompany = false; // Track if current input is a valid company
 
 function setCompany(companyName) {
-    document.getElementById('companyInput').value = companyName;
+    const input = document.getElementById('companyInput');
+    input.value = companyName;
+    validatedCompanies.add(companyName);
+    isValidCompany = true;
+    input.classList.remove('invalid-input');
+    input.classList.add('valid-input');
     hideAutocomplete();
 }
 
 async function analyzeCompany() {
-    const companyName = document.getElementById('companyInput').value.trim();
+    const companyInput = document.getElementById('companyInput');
+    const companyName = companyInput.value.trim();
     
     if (!companyName) {
         alert('Please enter a company name');
         return;
+    }
+    
+    // Validate company before analyzing
+    if (!isValidCompany && !validatedCompanies.has(companyName)) {
+        const isValid = await validateCompany(companyName);
+        if (!isValid) {
+            companyInput.classList.add('invalid-input');
+            alert('Please select a valid company from the suggestions. The company "' + companyName + '" was not found in our database.');
+            return;
+        }
     }
     
     // Show progress section
@@ -438,6 +456,8 @@ async function generateReport() {
     button.innerHTML = '<span>Generating...</span>';
     button.disabled = true;
     
+    console.log('Sending data to generate report:', currentAnalysisData);
+    
     try {
         const response = await fetch('/generate-report', {
             method: 'POST',
@@ -458,15 +478,30 @@ async function generateReport() {
             window.URL.revokeObjectURL(url);
             document.body.removeChild(a);
         } else {
-            alert('Error generating report');
+            const errorText = await response.text();
+            console.error('Server error:', errorText);
+            console.error('Response status:', response.status);
+            alert(`Error generating report: ${response.status} - ${errorText || 'Server error'}`);
         }
     } catch (error) {
-        console.error('Error:', error);
-        alert('An error occurred while generating the report');
+        console.error('Error details:', error);
+        alert(`An error occurred while generating the report: ${error.message || 'Unknown error'}`);
     } finally {
         // Restore button state
         button.innerHTML = originalContent;
         button.disabled = false;
+    }
+}
+
+// Validation function
+async function validateCompany(companyName) {
+    try {
+        const response = await fetch(`/api/validate-company?name=${encodeURIComponent(companyName)}`);
+        const data = await response.json();
+        return data.valid === true;
+    } catch (error) {
+        console.error('Error validating company:', error);
+        return false;
     }
 }
 
@@ -488,23 +523,43 @@ async function fetchCompanySuggestions(query) {
 
 function showAutocomplete(suggestions) {
     const dropdown = document.getElementById('autocompleteDropdown');
+    const input = document.getElementById('companyInput');
     if (!dropdown) return;
     
     if (suggestions.length === 0) {
-        hideAutocomplete();
+        // Show "no results" message if user has typed something
+        if (input.value.trim().length >= 2) {
+            dropdown.innerHTML = `
+                <div class="autocomplete-no-results">
+                    <span class="no-results-icon">⚠️</span>
+                    <span class="no-results-text">No matching companies found</span>
+                    <span class="no-results-hint">Please check the spelling or try a different company</span>
+                </div>
+            `;
+            dropdown.style.display = 'block';
+            input.classList.add('invalid-input');
+            input.classList.remove('valid-input');
+            isValidCompany = false;
+        } else {
+            hideAutocomplete();
+        }
         return;
     }
+    
+    // Mark input as potentially valid since we have suggestions
+    input.classList.remove('invalid-input');
     
     let html = '';
     suggestions.forEach((company, index) => {
         const ticker = company.ticker ? ` (${company.ticker})` : '';
+        const sector = company.sector ? ` • ${company.sector}` : '';
         html += `
             <div class="autocomplete-item ${index === selectedSuggestionIndex ? 'selected' : ''}" 
                  data-index="${index}"
                  data-name="${company.name}">
                 <div class="autocomplete-company">
                     <span class="autocomplete-name">${company.name}${ticker}</span>
-                    <span class="autocomplete-type">${company.type}</span>
+                    <span class="autocomplete-details">${company.type}${sector}</span>
                 </div>
             </div>
         `;
@@ -588,6 +643,10 @@ document.addEventListener('DOMContentLoaded', () => {
         input.addEventListener('input', function() {
             const query = this.value.trim();
             
+            // Reset validation state when typing
+            isValidCompany = false;
+            this.classList.remove('valid-input');
+            
             // Clear previous timeout
             if (autocompleteTimeout) {
                 clearTimeout(autocompleteTimeout);
@@ -596,6 +655,13 @@ document.addEventListener('DOMContentLoaded', () => {
             // Reset selection when typing
             selectedSuggestionIndex = -1;
             
+            // Check if this exact value is in our validated cache
+            if (validatedCompanies.has(query)) {
+                isValidCompany = true;
+                this.classList.add('valid-input');
+                this.classList.remove('invalid-input');
+            }
+            
             // Debounce the autocomplete
             autocompleteTimeout = setTimeout(async () => {
                 if (query.length >= 2) {
@@ -603,6 +669,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     showAutocomplete(suggestions);
                 } else {
                     hideAutocomplete();
+                    this.classList.remove('invalid-input');
                 }
             }, 300);
         });

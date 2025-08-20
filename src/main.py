@@ -61,7 +61,10 @@ scoring_engine = AIReadinessScoringEngine()
 financial_scoring_engine = FinancialAIReadinessScoringEngine()
 job_posting_service = JobPostingService()
 pdf_generator = PDFReportGenerator()
-enhanced_pdf_generator = EnhancedPDFReportGenerator()
+# Use absolute path for reports directory
+import os
+reports_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "reports")
+enhanced_pdf_generator = EnhancedPDFReportGenerator(output_dir=reports_dir)
 news_service = NewsService()
 company_database = CompanyDatabase()
 decision_maker_service = DecisionMakerService()
@@ -627,9 +630,16 @@ async def generate_pdf_report(request: Request, analysis_data: Dict[str, Any]):
     Generate a PDF report for a company's AI readiness assessment
     """
     try:
+        # Log the incoming data for debugging
+        logging.info(f"Generating report for company: {analysis_data.get('company_name', 'Unknown')}")
+        logging.debug(f"Analysis data keys: {list(analysis_data.keys())}")
+        
         # Extract company info from the analysis data
         company_name = analysis_data.get("company_name", "Unknown Company")
         domain = analysis_data.get("domain")
+        
+        # Log before generation
+        logging.info(f"Using reports directory: {reports_dir}")
         
         # Generate PDF report with enhanced design
         report_path = enhanced_pdf_generator.generate_report(
@@ -642,16 +652,18 @@ async def generate_pdf_report(request: Request, analysis_data: Dict[str, Any]):
         import os
         
         if os.path.exists(report_path):
+            logging.info(f"Report generated successfully: {report_path}")
             return FileResponse(
                 path=report_path,
                 media_type='application/pdf',
                 filename=os.path.basename(report_path)
             )
         else:
-            raise HTTPException(status_code=500, detail="Report generation failed")
+            logging.error(f"Report file not found: {report_path}")
+            raise HTTPException(status_code=500, detail="Report generation failed - file not found")
             
     except Exception as e:
-        logging.error(f"Error generating PDF report: {e}")
+        logging.error(f"Error generating PDF report: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Report generation failed: {str(e)}")
 
 @app.get("/reports/{filename}")
@@ -708,6 +720,54 @@ async def get_company_suggestions(q: str = None):
     except Exception as e:
         logging.error(f"Error fetching company suggestions: {e}")
         return {"suggestions": []}
+
+@app.get("/api/validate-company")
+async def validate_company(name: str = None):
+    """
+    Validate if a company name exists in our database
+    
+    Args:
+        name: Company name to validate
+    
+    Returns:
+        Validation result with suggestions if invalid
+    """
+    if not name:
+        return {"valid": False, "message": "Company name is required"}
+    
+    try:
+        # Search for exact match or close matches
+        logging.info(f"Validating company name: {name}")
+        matches = company_database.search_companies(name, limit=5)
+        
+        # Check for exact match (case-insensitive)
+        name_lower = name.lower().strip()
+        exact_match = False
+        
+        for company in matches:
+            if company["name"].lower() == name_lower:
+                exact_match = True
+                break
+        
+        if exact_match:
+            logging.info(f"Company '{name}' is valid")
+            return {
+                "valid": True,
+                "message": "Company found in database"
+            }
+        else:
+            logging.info(f"Company '{name}' not found, suggesting alternatives")
+            # Return suggestions for similar companies
+            suggestions = [c["name"] for c in matches[:3]]
+            return {
+                "valid": False,
+                "message": f"Company '{name}' not found in database",
+                "suggestions": suggestions
+            }
+    
+    except Exception as e:
+        logging.error(f"Error validating company: {e}")
+        return {"valid": False, "message": "Error validating company"}
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):

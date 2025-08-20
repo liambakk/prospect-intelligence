@@ -101,6 +101,51 @@ def get_company_suggestions():
     
     return jsonify({'suggestions': suggestions})
 
+@app.route('/api/validate-company', methods=['GET'])
+def validate_company():
+    """Validate if a company name exists in our database"""
+    company_name = request.args.get('name', '').strip()
+    
+    if not company_name:
+        return jsonify({'valid': False, 'message': 'Company name is required'})
+    
+    # Load finance companies data
+    companies_file = os.path.join(app.static_folder, 'data', 'finance_companies.json')
+    
+    try:
+        with open(companies_file, 'r') as f:
+            companies_data = json.load(f)
+            companies = companies_data.get('companies', [])
+    except (FileNotFoundError, json.JSONDecodeError):
+        companies = []
+    
+    # Check for exact match (case-insensitive)
+    company_name_lower = company_name.lower()
+    exact_match = False
+    suggestions = []
+    
+    for company in companies:
+        if company['name'].lower() == company_name_lower:
+            exact_match = True
+            break
+        # Collect potential suggestions for partial matches
+        elif company_name_lower in company['name'].lower() or any(word.startswith(company_name_lower.split()[0] if company_name_lower.split() else '') for word in company['name'].lower().split()):
+            suggestions.append(company['name'])
+            if len(suggestions) >= 3:
+                break
+    
+    if exact_match:
+        return jsonify({
+            'valid': True,
+            'message': 'Company found in database'
+        })
+    else:
+        return jsonify({
+            'valid': False,
+            'message': f"Company '{company_name}' not found in database",
+            'suggestions': suggestions[:3]
+        })
+
 @app.route('/analyze', methods=['POST'])
 @app.route('/analyze/comprehensive', methods=['POST'])
 def analyze_company():

@@ -173,6 +173,65 @@ class CompanyDatabase:
             {"name": "Southwest Airlines", "ticker": "LUV", "type": "Airline", "sector": "Transportation"},
             {"name": "FedEx", "ticker": "FDX", "type": "Logistics", "sector": "Transportation"},
             {"name": "UPS", "ticker": "UPS", "type": "Logistics", "sector": "Transportation"},
+            
+            # Additional Major Banks & Financial Institutions
+            {"name": "Standard Chartered", "ticker": "STAN.L", "type": "Commercial Bank", "sector": "Financial Services"},
+            {"name": "Societe Generale", "ticker": "GLE.PA", "type": "Commercial Bank", "sector": "Financial Services"},
+            {"name": "Mizuho Financial Group", "ticker": "MFG", "type": "Commercial Bank", "sector": "Financial Services"},
+            {"name": "Nomura Holdings", "ticker": "NMR", "type": "Investment Bank", "sector": "Financial Services"},
+            {"name": "Macquarie Group", "ticker": "MQG.AX", "type": "Investment Bank", "sector": "Financial Services"},
+            {"name": "ANZ Banking Group", "ticker": "ANZ.AX", "type": "Commercial Bank", "sector": "Financial Services"},
+            {"name": "Commonwealth Bank", "ticker": "CBA.AX", "type": "Commercial Bank", "sector": "Financial Services"},
+            {"name": "Westpac", "ticker": "WBC.AX", "type": "Commercial Bank", "sector": "Financial Services"},
+            {"name": "National Australia Bank", "ticker": "NAB.AX", "type": "Commercial Bank", "sector": "Financial Services"},
+            
+            # Additional Asset Managers & Investment Firms
+            {"name": "PIMCO", "ticker": "", "type": "Asset Manager", "sector": "Financial Services"},
+            {"name": "Wellington Management", "ticker": "", "type": "Asset Manager", "sector": "Financial Services"},
+            {"name": "Dimensional Fund Advisors", "ticker": "", "type": "Asset Manager", "sector": "Financial Services"},
+            {"name": "Capital Group", "ticker": "", "type": "Asset Manager", "sector": "Financial Services"},
+            {"name": "Federated Hermes", "ticker": "FHI", "type": "Asset Manager", "sector": "Financial Services"},
+            {"name": "Janus Henderson", "ticker": "JHG", "type": "Asset Manager", "sector": "Financial Services"},
+            {"name": "Schroders", "ticker": "SDR.L", "type": "Asset Manager", "sector": "Financial Services"},
+            {"name": "abrdn", "ticker": "ABDN.L", "type": "Asset Manager", "sector": "Financial Services"},
+            {"name": "Legal & General", "ticker": "LGEN.L", "type": "Asset Manager", "sector": "Financial Services"},
+            {"name": "M&G", "ticker": "MNG.L", "type": "Asset Manager", "sector": "Financial Services"},
+            
+            # Additional Regional Banks
+            {"name": "Fifth Third Bank", "ticker": "FITB", "type": "Regional Bank", "sector": "Financial Services"},
+            {"name": "KeyCorp", "ticker": "KEY", "type": "Regional Bank", "sector": "Financial Services"},
+            {"name": "Regions Financial", "ticker": "RF", "type": "Regional Bank", "sector": "Financial Services"},
+            {"name": "M&T Bank", "ticker": "MTB", "type": "Regional Bank", "sector": "Financial Services"},
+            {"name": "Huntington Bancshares", "ticker": "HBAN", "type": "Regional Bank", "sector": "Financial Services"},
+            {"name": "Citizens Financial", "ticker": "CFG", "type": "Regional Bank", "sector": "Financial Services"},
+            {"name": "Comerica", "ticker": "CMA", "type": "Regional Bank", "sector": "Financial Services"},
+            {"name": "Zions Bancorporation", "ticker": "ZION", "type": "Regional Bank", "sector": "Financial Services"},
+            {"name": "First Republic Bank", "ticker": "FRC", "type": "Regional Bank", "sector": "Financial Services"},
+            {"name": "Silicon Valley Bank", "ticker": "SIVB", "type": "Regional Bank", "sector": "Financial Services"},
+            
+            # More Fintech Companies
+            {"name": "Adyen", "ticker": "ADYEN.AS", "type": "Fintech", "sector": "Financial Services"},
+            {"name": "Toast", "ticker": "TOST", "type": "Fintech", "sector": "Financial Services"},
+            {"name": "Marqeta", "ticker": "MQ", "type": "Fintech", "sector": "Financial Services"},
+            {"name": "Bill.com", "ticker": "BILL", "type": "Fintech", "sector": "Financial Services"},
+            {"name": "Payoneer", "ticker": "PAYO", "type": "Fintech", "sector": "Financial Services"},
+            {"name": "Wise", "ticker": "WISE.L", "type": "Fintech", "sector": "Financial Services"},
+            {"name": "Revolut", "ticker": "", "type": "Fintech", "sector": "Financial Services"},
+            {"name": "N26", "ticker": "", "type": "Fintech", "sector": "Financial Services"},
+            {"name": "Monzo", "ticker": "", "type": "Fintech", "sector": "Financial Services"},
+            {"name": "Nubank", "ticker": "NU", "type": "Fintech", "sector": "Financial Services"},
+            
+            # Additional Insurance Companies
+            {"name": "Zurich Insurance", "ticker": "ZURN.SW", "type": "Insurance", "sector": "Financial Services"},
+            {"name": "Allianz", "ticker": "ALV.DE", "type": "Insurance", "sector": "Financial Services"},
+            {"name": "AXA", "ticker": "CS.PA", "type": "Insurance", "sector": "Financial Services"},
+            {"name": "Munich Re", "ticker": "MUV2.DE", "type": "Insurance", "sector": "Financial Services"},
+            {"name": "Swiss Re", "ticker": "SREN.SW", "type": "Insurance", "sector": "Financial Services"},
+            {"name": "Generali", "ticker": "G.MI", "type": "Insurance", "sector": "Financial Services"},
+            {"name": "Aviva", "ticker": "AV.L", "type": "Insurance", "sector": "Financial Services"},
+            {"name": "Willis Towers Watson", "ticker": "WTW", "type": "Insurance", "sector": "Financial Services"},
+            {"name": "Marsh McLennan", "ticker": "MMC", "type": "Insurance", "sector": "Financial Services"},
+            {"name": "Aon", "ticker": "AON", "type": "Insurance", "sector": "Financial Services"},
         ]
     
     def search_companies(self, query: str, limit: int = 10) -> List[Dict[str, str]]:
