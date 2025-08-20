@@ -69,7 +69,14 @@ class PDFGenerator:
         """Generate PDF report from analysis data"""
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"{data['company_name']}_AI_Readiness_{timestamp}.pdf"
-        filepath = os.path.join(os.path.dirname(__file__), filename)
+        
+        # Use /tmp directory on Vercel or similar read-only environments
+        if os.environ.get('VERCEL') or os.environ.get('AWS_LAMBDA_FUNCTION_NAME'):
+            output_dir = "/tmp"
+        else:
+            output_dir = os.path.dirname(__file__)
+        
+        filepath = os.path.join(output_dir, filename)
         
         # Create PDF document
         doc = SimpleDocTemplate(

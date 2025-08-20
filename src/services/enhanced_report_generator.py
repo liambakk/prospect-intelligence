@@ -135,8 +135,13 @@ class EnhancedPDFReportGenerator:
     
     def __init__(self, output_dir: str = "reports"):
         """Initialize enhanced PDF generator"""
-        self.output_dir = Path(output_dir)
-        self.output_dir.mkdir(exist_ok=True)
+        import os
+        # Use /tmp directory on Vercel or similar read-only environments
+        if os.environ.get('VERCEL') or os.environ.get('AWS_LAMBDA_FUNCTION_NAME') or not os.access(output_dir, os.W_OK):
+            self.output_dir = Path("/tmp/reports")
+        else:
+            self.output_dir = Path(output_dir)
+        self.output_dir.mkdir(parents=True, exist_ok=True)
         self.styles = self._create_modern_styles()
     
     def _create_modern_styles(self) -> Dict[str, ParagraphStyle]:

@@ -61,9 +61,14 @@ scoring_engine = AIReadinessScoringEngine()
 financial_scoring_engine = FinancialAIReadinessScoringEngine()
 job_posting_service = JobPostingService()
 pdf_generator = PDFReportGenerator()
-# Use absolute path for reports directory
+# Use appropriate directory based on environment
 import os
-reports_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "reports")
+if os.environ.get('VERCEL') or os.environ.get('AWS_LAMBDA_FUNCTION_NAME'):
+    # Use /tmp for serverless environments
+    reports_dir = "/tmp/reports"
+else:
+    # Use local reports directory for development
+    reports_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "reports")
 enhanced_pdf_generator = EnhancedPDFReportGenerator(output_dir=reports_dir)
 news_service = NewsService()
 company_database = CompanyDatabase()
