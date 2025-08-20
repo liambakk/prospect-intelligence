@@ -420,8 +420,11 @@ class EnhancedPDFReportGenerator:
         
         elements.append(Spacer(1, 0.5*inch))
         
-        # Readiness level
+        # Readiness level (only show the level, not the full evaluation text)
         category = data.get('readiness_category', 'Assessment Pending')
+        # Extract just the readiness level (e.g., "Very High" from "Very High - Prime candidate...")
+        if ' - ' in category:
+            category = category.split(' - ')[0]
         elements.append(Paragraph(
             f"<b>{category}</b>",
             ParagraphStyle(
