@@ -42,15 +42,19 @@ class ScoreGauge(Flowable):
         self.width = width
         self.height = height
         
-        # Determine color based on score
+        # Determine color and category based on score
         if score >= 80:
             self.color = HexColor('#10b981')  # Green
+            self.category = 'VERY HIGH'
         elif score >= 65:
             self.color = HexColor('#3b82f6')  # Blue
+            self.category = 'HIGH'
         elif score >= 50:
             self.color = HexColor('#f59e0b')  # Orange
+            self.category = 'MODERATE'
         else:
             self.color = HexColor('#ef4444')  # Red
+            self.category = 'LOW'
     
     def draw(self):
         # Draw background circle
