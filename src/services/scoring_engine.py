@@ -72,7 +72,10 @@ class AIReadinessScoringEngine:
             hunter_data, web_scraping_data, job_posting_data
         )
         component_scores["tech_hiring"] = tech_hiring_score
-        if tech_hiring_score > 0:
+        # Only add confidence if we have actual data (not default score of 30)
+        if (hunter_data and hunter_data.get("key_contacts")) or \
+           (web_scraping_data and web_scraping_data.get("careers_signals")) or \
+           (job_posting_data and job_posting_data.get("total_jobs_found", 0) > 0):
             confidence_factors.append(0.9)
         
         # 2. AI Mentions Score (25%)
@@ -80,7 +83,8 @@ class AIReadinessScoringEngine:
             web_scraping_data, news_data
         )
         component_scores["ai_mentions"] = ai_mentions_score
-        if ai_mentions_score > 0:
+        # Only add confidence if we have actual web/news data
+        if web_scraping_data or news_data:
             confidence_factors.append(0.8)
         
         # 3. Company Size Score (20%)
@@ -88,7 +92,9 @@ class AIReadinessScoringEngine:
             hunter_data, clearbit_data
         )
         component_scores["company_size"] = company_size_score
-        if company_size_score > 0:
+        # Only add confidence if we have size data
+        if (hunter_data and hunter_data.get("size")) or \
+           (clearbit_data and clearbit_data.get("employees")):
             confidence_factors.append(0.7)
         
         # 4. Industry Adoption Score (15%)
@@ -96,7 +102,9 @@ class AIReadinessScoringEngine:
             hunter_data, clearbit_data
         )
         component_scores["industry_adoption"] = industry_score
-        if industry_score > 0:
+        # Only add confidence if we have industry data
+        if (hunter_data and hunter_data.get("industry")) or \
+           (clearbit_data and clearbit_data.get("industry")):
             confidence_factors.append(0.85)
         
         # 5. Tech Modernization Score (15%)
@@ -104,7 +112,9 @@ class AIReadinessScoringEngine:
             web_scraping_data, clearbit_data
         )
         component_scores["tech_modernization"] = tech_modern_score
-        if tech_modern_score > 0:
+        # Only add confidence if we have tech stack data
+        if (web_scraping_data and web_scraping_data.get("tech_stack_detected")) or \
+           (clearbit_data and clearbit_data.get("tech_stack")):
             confidence_factors.append(0.75)
         
         # Calculate weighted overall score
@@ -145,6 +155,42 @@ class AIReadinessScoringEngine:
         score = 0
         signals = 0
         
+        # Job posting data (highest weight - most direct signal)
+        if job_data:
+            ai_ml_jobs = job_data.get("ai_ml_jobs_count", 0)
+            tech_jobs = job_data.get("tech_jobs_count", 0)
+            hiring_intensity = job_data.get("ai_hiring_intensity", "none")
+            
+            # Score based on AI/ML job count
+            if ai_ml_jobs >= 10:
+                score += 40
+            elif ai_ml_jobs >= 5:
+                score += 30
+            elif ai_ml_jobs >= 2:
+                score += 20
+            elif ai_ml_jobs >= 1:
+                score += 10
+            
+            # Additional score for general tech hiring
+            if tech_jobs >= 20:
+                score += 20
+            elif tech_jobs >= 10:
+                score += 15
+            elif tech_jobs >= 5:
+                score += 10
+            elif tech_jobs >= 1:
+                score += 5
+            
+            # Bonus for high AI hiring intensity
+            if hiring_intensity == "very_high":
+                score += 15
+            elif hiring_intensity == "high":
+                score += 10
+            elif hiring_intensity == "moderate":
+                score += 5
+            
+            signals += 1
+        
         # Hunter.io executive contacts
         if hunter_data and hunter_data.get("key_contacts"):
             tech_executives = [
@@ -153,17 +199,17 @@ class AIReadinessScoringEngine:
                       for role in ["cto", "engineer", "data", "ai", "ml", "tech"])
             ]
             if tech_executives:
-                score += min(len(tech_executives) * 20, 60)
+                score += min(len(tech_executives) * 10, 30)  # Reduced weight
                 signals += 1
         
         # Web scraping careers signals
         if web_data and web_data.get("careers_signals"):
             careers = web_data["careers_signals"]
             if careers.get("ai_roles"):
-                score += min(len(careers["ai_roles"]) * 15, 45)
+                score += min(len(careers["ai_roles"]) * 8, 25)  # Reduced weight
                 signals += 1
             if careers.get("tech_roles_count", 0) > 5:
-                score += 20
+                score += 10  # Reduced weight
                 signals += 1
         
         # Normalize if we have signals
@@ -177,29 +223,49 @@ class AIReadinessScoringEngine:
         web_data: Optional[Dict],
         news_data: Optional[Dict]
     ) -> int:
-        """Calculate score based on AI/ML mentions"""
+        """Calculate score based on AI/ML mentions in web content and news"""
         score = 0
+        data_sources = 0
         
+        # Score from web scraping
         if web_data:
             ai_mentions = web_data.get("ai_mentions_count", 0)
             if ai_mentions > 30:
-                score = 90
+                web_score = 90
             elif ai_mentions > 20:
-                score = 75
+                web_score = 75
             elif ai_mentions > 10:
-                score = 60
+                web_score = 60
             elif ai_mentions > 5:
-                score = 45
+                web_score = 45
             elif ai_mentions > 0:
-                score = 30
+                web_score = 30
             else:
-                score = 15
+                web_score = 15
+            score += web_score
+            data_sources += 1
         
-        # Boost if AI is in company description or news
-        if news_data and news_data.get("ai_initiatives"):
-            score = min(score + 20, 100)
+        # Score from news articles
+        if news_data:
+            tech_focus = news_data.get("tech_focus_score", 0)
+            articles_count = news_data.get("articles_processed", 0)
+            
+            if tech_focus > 0 and articles_count > 0:
+                # Use tech focus score directly (already 0-100)
+                news_score = tech_focus
+                score += news_score
+                data_sources += 1
+            
+            # Bonus for recent AI trends in news
+            trends = news_data.get("recent_trends", [])
+            if any("artificial intelligence" in t.lower() or "machine learning" in t.lower() for t in trends):
+                score += 10
         
-        return score
+        # Average the scores if we have multiple sources
+        if data_sources > 0:
+            score = score / data_sources
+        
+        return min(int(score), 100)
     
     def _calculate_company_size_score(
         self,
@@ -225,16 +291,19 @@ class AIReadinessScoringEngine:
         
         # Score based on size
         if size:
-            if "10000+" in str(size):
+            size_str = str(size)
+            if "10000+" in size_str:
                 return 85
-            elif "5000" in str(size) or "1000" in str(size):
+            elif "5000" in size_str or "1000-5000" in size_str:
                 return 70
-            elif "500" in str(size) or "100" in str(size):
+            elif "500" in size_str or "100-1000" in size_str or "100-500" in size_str:
                 return 60
-            elif "50" in str(size):
+            elif "50" in size_str or "11-50" in size_str:
                 return 50
-            else:
+            elif "1-10" in size_str:
                 return 40
+            else:
+                return 50  # Default for unrecognized formats
         
         return 50  # Default medium score
     

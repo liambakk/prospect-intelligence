@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prospect Intelligence | ModelML Sales</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1 class="logo">ModelML Prospect Intelligence</h1>
+                <p class="tagline">AI-Powered Sales Research in Seconds</p>
+            </div>
+        </header>
+
+        <!-- Search Section -->
+        <section class="search-section">
+            <div class="search-container">
+                <h2>Analyze Company AI Readiness</h2>
+                <p class="search-description">Enter a company name to generate comprehensive AI readiness analysis</p>
+                <div class="search-box">
+                    <input type="text" id="companyInput" placeholder="e.g., Goldman Sachs, JPMorgan Chase, BlackRock" />
+                    <button id="analyzeBtn" onclick="analyzeCompany()">Analyze Company</button>
+                </div>
+                <div class="test-companies">
+                    <span>Try these:</span>
+                    <button class="test-company-btn" onclick="setCompany('JPMorgan Chase')">JPMorgan Chase</button>
+                    <button class="test-company-btn" onclick="setCompany('Goldman Sachs')">Goldman Sachs</button>
+                    <button class="test-company-btn" onclick="setCompany('BlackRock')">BlackRock</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Progress Section -->
+        <section id="progressSection" class="progress-section" style="display: none;">
+            <div class="progress-container">
+                <h3>Analyzing <span id="analyzingCompany"></span>...</h3>
+                <div class="progress-steps" id="progressSteps">
+                    <!-- Steps will be added dynamically -->
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Results Section -->
+        <section id="resultsSection" class="results-section" style="display: none;">
+            <!-- Company Overview Card -->
+            <div class="card company-overview">
+                <h3>Company Overview</h3>
+                <div class="company-details" id="companyDetails">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+
+            <!-- AI Readiness Score Card -->
+            <div class="card readiness-score">
+                <h3>AI Readiness Score</h3>
+                <div class="score-display">
+                    <div class="score-circle">
+                        <svg width="200" height="200">
+                            <circle cx="100" cy="100" r="90" fill="none" stroke="#e5e7eb" stroke-width="20"/>
+                            <circle id="scoreCircle" cx="100" cy="100" r="90" fill="none" stroke="#3b82f6" 
+                                    stroke-width="20" stroke-dasharray="565" stroke-dashoffset="565"
+                                    transform="rotate(-90 100 100)"/>
+                        </svg>
+                        <div class="score-number" id="scoreNumber">0</div>
+                    </div>
+                    <div class="score-details">
+                        <h4 id="readinessLevel">Loading...</h4>
+                        <div class="component-scores" id="componentScores">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Key Insights Card -->
+            <div class="card key-insights">
+                <h3>Key Insights</h3>
+                <div class="insights-grid">
+                    <div class="insight-item">
+                        <h4>=Ê Tech Hiring</h4>
+                        <p id="hiringInsight">Loading...</p>
+                    </div>
+                    <div class="insight-item">
+                        <h4>=ð Recent Initiatives</h4>
+                        <p id="newsInsight">Loading...</p>
+                    </div>
+                    <div class="insight-item">
+                        <h4>< Digital Presence</h4>
+                        <p id="webInsight">Loading...</p>
+                    </div>
+                    <div class="insight-item">
+                        <h4><â Industry Position</h4>
+                        <p id="industryInsight">Loading...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Decision Makers Card -->
+            <div class="card decision-makers">
+                <h3>Key Decision Makers</h3>
+                <div class="decision-makers-list" id="decisionMakers">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+
+            <!-- Sales Approach Card -->
+            <div class="card sales-approach">
+                <h3>Recommended Sales Approach</h3>
+                <div class="approach-content" id="salesApproach">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+
+            <!-- Actions Section -->
+            <div class="actions-section">
+                <button class="action-btn primary" onclick="generateReport()">
+                    =Ä Generate PDF Report
+                </button>
+                <button class="action-btn secondary" onclick="resetAnalysis()">
+                    = Analyze Another Company
+                </button>
+            </div>
+        </section>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
