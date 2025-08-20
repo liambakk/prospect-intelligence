@@ -646,7 +646,9 @@ async def get_company_suggestions(q: str = None):
     
     try:
         # Search for matching companies
+        logging.info(f"Searching for companies with query: {q}")
         suggestions = company_database.search_companies(q, limit=8)
+        logging.info(f"Found {len(suggestions)} suggestions for query: {q}")
         
         # Format response for frontend
         formatted_suggestions = []
@@ -661,7 +663,7 @@ async def get_company_suggestions(q: str = None):
         return {"suggestions": formatted_suggestions}
     
     except Exception as e:
-        logger.error(f"Error fetching company suggestions: {e}")
+        logging.error(f"Error fetching company suggestions: {e}")
         return {"suggestions": []}
 
 @app.websocket("/ws")

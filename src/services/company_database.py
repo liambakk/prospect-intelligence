@@ -18,6 +18,7 @@ class CompanyDatabase:
     def __init__(self):
         """Initialize with a curated list of companies"""
         self.companies = self._initialize_company_list()
+        logger.info(f"CompanyDatabase initialized with {len(self.companies)} companies")
     
     def _initialize_company_list(self) -> List[Dict[str, str]]:
         """
@@ -38,6 +39,7 @@ class CompanyDatabase:
             {"name": "UBS", "ticker": "UBS", "type": "Investment Bank", "sector": "Financial Services"},
             {"name": "HSBC", "ticker": "HSBC", "type": "Commercial Bank", "sector": "Financial Services"},
             {"name": "BNP Paribas", "ticker": "BNP", "type": "Investment Bank", "sector": "Financial Services"},
+            {"name": "Intesa Sanpaolo", "ticker": "ISP.MI", "type": "Commercial Bank", "sector": "Financial Services"},
             {"name": "Royal Bank of Canada", "ticker": "RY", "type": "Commercial Bank", "sector": "Financial Services"},
             {"name": "TD Bank", "ticker": "TD", "type": "Commercial Bank", "sector": "Financial Services"},
             {"name": "PNC Financial", "ticker": "PNC", "type": "Regional Bank", "sector": "Financial Services"},

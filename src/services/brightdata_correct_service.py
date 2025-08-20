@@ -263,6 +263,10 @@ class BrightDataCorrectService:
                 "https://www.linkedin.com/in/don-callahan-50a5a63/",
                 "https://www.linkedin.com/in/stuart-riley-6a15871/"
             ],
+            "intesa": [
+                "https://www.linkedin.com/in/carlo-messina-9153bb3/",
+                "https://www.linkedin.com/in/stefano-del-punta-a56a7510/"
+            ],
             
             # Asset Management
             "blackrock": [
@@ -418,6 +422,8 @@ class BrightDataCorrectService:
                 linkedin_urls = known_profiles["wells fargo"]
             elif any(term in company_lower for term in ["citigroup", "citibank", "citi"]):
                 linkedin_urls = known_profiles["citi"]
+            elif any(term in company_lower for term in ["intesa", "sanpaolo", "isp"]):
+                linkedin_urls = known_profiles["intesa"]
             elif any(term in company_lower for term in ["alphabet", "google"]):
                 linkedin_urls = known_profiles["google"]
             elif any(term in company_lower for term in ["facebook", "meta"]):

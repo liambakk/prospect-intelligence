@@ -316,34 +316,15 @@ body {
 }
 
 .carousel-container {
-    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-    border-radius: 24px;
-    padding: 3rem 2rem;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
-    min-height: 450px;
+    background: var(--background-white);
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: var(--shadow-sm);
+    min-height: 400px;
     position: relative;
-    overflow: hidden;
 }
 
-/* Animated background gradient */
-.carousel-container::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: radial-gradient(circle at 30% 50%, rgba(59, 130, 246, 0.03) 0%, transparent 50%),
-                radial-gradient(circle at 70% 80%, rgba(16, 185, 129, 0.03) 0%, transparent 50%);
-    animation: floatingGradient 20s ease-in-out infinite;
-    pointer-events: none;
-}
-
-@keyframes floatingGradient {
-    0%, 100% { transform: translate(0, 0) rotate(0deg); }
-    33% { transform: translate(-10px, -10px) rotate(120deg); }
-    66% { transform: translate(10px, -10px) rotate(240deg); }
-}
+/* Clean background - no gradients */
 
 .carousel-header {
     text-align: center;
@@ -391,140 +372,81 @@ body {
     justify-content: center;
 }
 
-/* Carousel Cards */
+/* Carousel Cards - No container, just content */
 .carousel-card {
     position: absolute;
-    width: 90%;
-    max-width: 400px;
-    height: 90%;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%) translateY(150px) scale(0.8) rotateX(-15deg);
+    width: 100%;
+    height: 100%;
+    left: 0;
+    top: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(145deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 249, 250, 0.95) 100%);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.8);
-    border-radius: 20px;
-    padding: 2.5rem;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15),
-                0 0 0 1px rgba(0, 0, 0, 0.02);
     opacity: 0;
+    transform: translateY(50px) scale(0.9);
     transition: none;
     will-change: transform, opacity;
 }
 
 .carousel-card.entering {
-    animation: smoothCardEnter 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    animation: simpleEnter 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
 }
 
 .carousel-card.active {
     opacity: 1;
-    transform: translate(-50%, -50%) translateY(0) scale(1) rotateX(0);
+    transform: translateY(0) scale(1);
     z-index: 10;
-    animation: cardFloat 3s ease-in-out infinite;
 }
 
 .carousel-card.exiting {
-    animation: smoothCardExit 0.8s cubic-bezier(0.4, 0, 0.6, 1) forwards;
+    animation: simpleExit 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
 }
 
-@keyframes smoothCardEnter {
+@keyframes simpleEnter {
     0% {
         opacity: 0;
-        transform: translate(-50%, -50%) translateY(150px) scale(0.8) rotateX(-15deg);
-        filter: blur(10px);
-    }
-    50% {
-        opacity: 0.7;
-        filter: blur(5px);
+        transform: translateY(30px) scale(0.95);
     }
     100% {
         opacity: 1;
-        transform: translate(-50%, -50%) translateY(0) scale(1) rotateX(0);
-        filter: blur(0);
+        transform: translateY(0) scale(1);
     }
 }
 
-@keyframes smoothCardExit {
+@keyframes simpleExit {
     0% {
         opacity: 1;
-        transform: translate(-50%, -50%) translateY(0) scale(1) rotateX(0);
-        filter: blur(0);
-    }
-    50% {
-        opacity: 0.5;
-        filter: blur(5px);
+        transform: translateY(0) scale(1);
     }
     100% {
         opacity: 0;
-        transform: translate(-50%, -50%) translateY(-150px) scale(0.8) rotateX(15deg);
-        filter: blur(10px);
-    }
-}
-
-@keyframes cardFloat {
-    0%, 100% {
-        transform: translate(-50%, -50%) translateY(0) scale(1) rotateX(0);
-    }
-    50% {
-        transform: translate(-50%, -50%) translateY(-5px) scale(1.02) rotateX(0);
+        transform: translateY(-30px) scale(0.95);
     }
 }
 
 .carousel-icon {
-    font-size: 3.5rem;
-    margin-bottom: 1.5rem;
-    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
-    animation: iconBounce 2s ease-in-out infinite;
-    transform-origin: center;
-}
-
-@keyframes iconBounce {
-    0%, 100% {
-        transform: scale(1) translateY(0);
-    }
-    25% {
-        transform: scale(1.05) translateY(-2px);
-    }
-    75% {
-        transform: scale(0.95) translateY(2px);
-    }
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    display: block;
 }
 
 .carousel-text {
-    font-size: 1.25rem;
+    font-size: 1.5rem;
     color: var(--text-primary);
     text-align: center;
-    font-weight: 600;
+    font-weight: 500;
     letter-spacing: -0.5px;
     margin-bottom: 0.5rem;
-    opacity: 0;
-    animation: textFadeIn 0.5s ease-out 0.3s forwards;
 }
 
 .carousel-subtext {
-    font-size: 0.9rem;
+    font-size: 1rem;
     color: var(--text-secondary);
     text-align: center;
-    margin-top: 0.5rem;
-    opacity: 0;
-    animation: textFadeIn 0.5s ease-out 0.5s forwards;
-    max-width: 280px;
-    line-height: 1.4;
-}
-
-@keyframes textFadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    margin-top: 0.25rem;
+    max-width: 350px;
+    line-height: 1.5;
 }
 
 /* Progress Indicators */
@@ -589,61 +511,7 @@ body {
     letter-spacing: -0.5px;
 }
 
-/* Glow effect for active card */
-.carousel-card.active::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(45deg, 
-        rgba(59, 130, 246, 0.1) 0%, 
-        rgba(16, 185, 129, 0.1) 100%);
-    border-radius: 20px;
-    opacity: 0;
-    animation: glowPulse 2s ease-in-out infinite;
-    z-index: -1;
-    filter: blur(20px);
-}
-
-.carousel-card.active::after {
-    content: '';
-    position: absolute;
-    inset: -1px;
-    background: linear-gradient(90deg, 
-        rgba(59, 130, 246, 0.3) 0%, 
-        rgba(16, 185, 129, 0.3) 50%, 
-        rgba(59, 130, 246, 0.3) 100%);
-    background-size: 200% 100%;
-    border-radius: 20px;
-    opacity: 0.3;
-    animation: shimmerSubtle 3s linear infinite;
-    z-index: -2;
-    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    mask-composite: exclude;
-    padding: 1px;
-}
-
-@keyframes glowPulse {
-    0%, 100% {
-        opacity: 0.3;
-        transform: scale(1);
-    }
-    50% {
-        opacity: 0.6;
-        transform: scale(1.02);
-    }
-}
-
-@keyframes shimmerSubtle {
-    0% {
-        background-position: 200% 0;
-    }
-    100% {
-        background-position: -200% 0;
-    }
-}
+/* No glow effects - clean minimal design */
 
 /* Results Dashboard */
 .results-dashboard {
