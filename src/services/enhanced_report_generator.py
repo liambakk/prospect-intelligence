@@ -81,12 +81,12 @@ class ScoreGauge(Flowable):
         text_width = canvas.stringWidth(score_text, 'Helvetica-Bold', 48)
         canvas.drawString(cx - text_width/2, cy + 10, score_text)
         
-        # Score label
-        canvas.setFont('Helvetica', 12)
-        canvas.setFillColor(HexColor('#718096'))
-        label = "AI READY"
-        label_width = canvas.stringWidth(label, 'Helvetica', 12)
-        canvas.drawString(cx - label_width/2, cy - 20, label)
+        # Category label with dynamic text
+        canvas.setFont('Helvetica-Bold', 11)
+        canvas.setFillColor(self.color)
+        label = self.category
+        label_width = canvas.stringWidth(label, 'Helvetica-Bold', 11)
+        canvas.drawString(cx - label_width/2, cy - 25, label)
 
 
 class ModernCard(Flowable):
@@ -314,44 +314,98 @@ class EnhancedPDFReportGenerator:
             raise
     
     def _create_cover_page(self, company_name: str, data: Dict[str, Any]) -> List:
-        """Create a beautiful cover page"""
+        """Create a beautiful cover page with ModelML branding"""
         elements = []
         
-        # Add spacing
-        elements.append(Spacer(1, 1.5*inch))
+        # Add ModelML logo at the top
+        try:
+            import os
+            logo_path = None
+            
+            # Try multiple possible logo locations
+            possible_paths = [
+                "/tmp/modelml.png",  # For Vercel
+                "static/modelml.png",  # Relative path
+                os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "static/modelml.png"),  # Absolute
+            ]
+            
+            for path in possible_paths:
+                if os.path.exists(path):
+                    logo_path = path
+                    break
+            
+            if logo_path:
+                logo = Image(logo_path, width=80, height=80)
+                logo.hAlign = 'CENTER'
+                elements.append(logo)
+                elements.append(Spacer(1, 0.3*inch))
+        except Exception as e:
+            logger.warning(f"Could not add logo: {e}")
         
-        # ModelML branding
+        # ModelML branding text
         branding = Paragraph(
-            "<b>MODELML</b> | PROSPECT INTELLIGENCE",
+            "<b>MODELML</b>",
             ParagraphStyle(
-                'CoverBranding',
-                fontSize=12,
-                textColor=self.COLORS['text_muted'],
-                alignment=TA_CENTER,
-                fontName='Helvetica',
-                letterSpacing=2
-            )
-        )
-        elements.append(branding)
-        elements.append(Spacer(1, 0.5*inch))
-        
-        # Main title
-        title = Paragraph(
-            "AI Readiness Assessment",
-            self.styles['MainTitle']
-        )
-        elements.append(title)
-        
-        # Company name
-        company = Paragraph(
-            f"<b>{company_name}</b>",
-            ParagraphStyle(
-                'CoverCompany',
+                'CoverBrandingMain',
                 fontSize=24,
                 textColor=self.COLORS['primary_dark'],
                 alignment=TA_CENTER,
                 fontName='Helvetica-Bold',
-                spaceAfter=24
+                letterSpacing=3
+            )
+        )
+        elements.append(branding)
+        
+        # Subtitle
+        subtitle = Paragraph(
+            "PROSPECT INTELLIGENCE PLATFORM",
+            ParagraphStyle(
+                'CoverBrandingSub',
+                fontSize=11,
+                textColor=self.COLORS['text_secondary'],
+                alignment=TA_CENTER,
+                fontName='Helvetica',
+                letterSpacing=2,
+                spaceAfter=36
+            )
+        )
+        elements.append(subtitle)
+        
+        # Decorative line
+        elements.append(HRFlowable(
+            width="50%",
+            thickness=1,
+            color=self.COLORS['border_light'],
+            spaceAfter=36,
+            spaceBefore=12,
+            hAlign='CENTER'
+        ))
+        elements.append(Spacer(1, 0.5*inch))
+        
+        # Main title with enhanced styling
+        title = Paragraph(
+            "AI READINESS ASSESSMENT",
+            ParagraphStyle(
+                'EnhancedTitle',
+                fontSize=32,
+                textColor=self.COLORS['primary_dark'],
+                alignment=TA_CENTER,
+                fontName='Helvetica-Bold',
+                spaceAfter=12
+            )
+        )
+        elements.append(title)
+        
+        # Company name with better styling
+        company = Paragraph(
+            f"<font color='#3b82f6'>{company_name}</font>",
+            ParagraphStyle(
+                'CoverCompany',
+                fontSize=28,
+                textColor=self.COLORS['accent_blue'],
+                alignment=TA_CENTER,
+                fontName='Helvetica-Bold',
+                spaceAfter=48
             )
         )
         elements.append(company)
@@ -443,11 +497,13 @@ class EnhancedPDFReportGenerator:
         
         metrics_table = Table(metrics_data, colWidths=[2*inch, 2*inch, 2*inch])
         metrics_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, -1), self.COLORS['background_white']),
-            ('GRID', (0, 0), (-1, -1), 1, self.COLORS['border_light']),
-            ('PADDING', (0, 0), (-1, -1), 20),
+            ('BACKGROUND', (0, 0), (-1, -1), HexColor('#fafbfc')),
+            ('BOX', (0, 0), (-1, -1), 1.5, self.COLORS['border_light']),
+            ('GRID', (0, 0), (-1, -1), 0.5, HexColor('#f3f4f6')),
+            ('PADDING', (0, 0), (-1, -1), 25),
             ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('ROUNDEDCORNERS', [8, 8, 8, 8]),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('ROUNDEDCORNERS', [10, 10, 10, 10]),
         ]))
         
         elements.append(metrics_table)
@@ -859,29 +915,50 @@ class EnhancedPDFReportGenerator:
         return elements
     
     def _add_header_footer(self, canvas, doc):
-        """Add header and footer to each page"""
+        """Add elegant header and footer to each page"""
         canvas.saveState()
         
-        # Header
-        canvas.setFont('Helvetica', 9)
-        canvas.setFillColor(self.COLORS['text_muted'])
-        canvas.drawString(48, doc.pagesize[1] - 30, "ModelML Prospect Intelligence")
-        canvas.drawRightString(doc.pagesize[0] - 48, doc.pagesize[1] - 30, 
-                              datetime.now().strftime("%B %Y"))
+        # Skip header/footer on first page (cover page)
+        if canvas.getPageNumber() > 1:
+            # Header with ModelML branding
+            canvas.setFont('Helvetica-Bold', 10)
+            canvas.setFillColor(self.COLORS['primary_dark'])
+            canvas.drawString(48, doc.pagesize[1] - 30, "MODELML")
+            
+            canvas.setFont('Helvetica', 9)
+            canvas.setFillColor(self.COLORS['text_secondary'])
+            canvas.drawString(100, doc.pagesize[1] - 30, "| Prospect Intelligence Platform")
+            
+            canvas.drawRightString(doc.pagesize[0] - 48, doc.pagesize[1] - 30, 
+                                  datetime.now().strftime("%B %d, %Y"))
+            
+            # Elegant header line with gradient effect
+            canvas.setStrokeColor(self.COLORS['accent_blue'])
+            canvas.setLineWidth(2)
+            canvas.line(48, doc.pagesize[1] - 38, 150, doc.pagesize[1] - 38)
+            
+            canvas.setStrokeColor(self.COLORS['border_light'])
+            canvas.setLineWidth(1)
+            canvas.line(150, doc.pagesize[1] - 38, doc.pagesize[0] - 48, doc.pagesize[1] - 38)
         
-        # Header line
-        canvas.setStrokeColor(self.COLORS['border_light'])
-        canvas.setLineWidth(1)
-        canvas.line(48, doc.pagesize[1] - 35, doc.pagesize[0] - 48, doc.pagesize[1] - 35)
-        
-        # Footer
-        page_num = canvas.getPageNumber()
-        canvas.setFont('Helvetica', 9)
-        canvas.setFillColor(self.COLORS['text_muted'])
-        canvas.drawCentredString(doc.pagesize[0] / 2, 30, f"Page {page_num}")
-        
-        # Footer line
-        canvas.line(48, 45, doc.pagesize[0] - 48, 45)
+        # Footer with page numbers
+        if canvas.getPageNumber() > 1:
+            page_num = canvas.getPageNumber() - 1  # Don't count cover page
+            canvas.setFont('Helvetica', 9)
+            canvas.setFillColor(self.COLORS['text_muted'])
+            
+            # Footer line
+            canvas.setStrokeColor(self.COLORS['border_light'])
+            canvas.setLineWidth(0.5)
+            canvas.line(48, 40, doc.pagesize[0] - 48, 40)
+            
+            # Page number
+            canvas.drawCentredString(doc.pagesize[0] / 2, 25, f"Page {page_num}")
+            
+            # Confidential notice
+            canvas.setFont('Helvetica-Oblique', 8)
+            canvas.setFillColor(self.COLORS['text_muted'])
+            canvas.drawString(48, 25, "Confidential - ModelML Proprietary")
         
         canvas.restoreState()
     
