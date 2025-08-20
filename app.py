@@ -16,6 +16,18 @@ from config import Config
 app = Flask(__name__)
 app.config.from_object(Config)
 
+# Disable caching in development
+app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
+app.config['TEMPLATES_AUTO_RELOAD'] = True
+
+# Add cache control headers
+@app.after_request
+def after_request(response):
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, public, max-age=0"
+    response.headers["Expires"] = "0"
+    response.headers["Pragma"] = "no-cache"
+    return response
+
 # Initialize services
 clearbit_service = ClearbitService(Config.CLEARBIT_API_KEY)
 job_scraper = JobScraper()
@@ -27,7 +39,67 @@ recommendation_engine = RecommendationEngine()
 @app.route('/')
 def index():
     """Render the main dashboard"""
-    return render_template('index.html')
+    # Add timestamp for cache busting
+    version = int(time.time())
+    return render_template('index.html', version=version)
+
+@app.route('/api/company-suggestions', methods=['GET'])
+def get_company_suggestions():
+    """Get company name suggestions for autocomplete"""
+    query = request.args.get('q', '').strip().lower()
+    
+    if len(query) < 2:
+        return jsonify({'suggestions': []})
+    
+    # Load finance companies data
+    companies_file = os.path.join(app.static_folder, 'data', 'finance_companies.json')
+    
+    try:
+        with open(companies_file, 'r') as f:
+            companies_data = json.load(f)
+            companies = companies_data.get('companies', [])
+    except (FileNotFoundError, json.JSONDecodeError):
+        # Fallback to hardcoded list if file not found
+        companies = [
+            {"name": "JPMorgan Chase", "type": "Investment Bank", "sector": "Banking"},
+            {"name": "Bank of America", "type": "Commercial Bank", "sector": "Banking"},
+            {"name": "Goldman Sachs", "type": "Investment Bank", "sector": "Investment Banking"},
+            {"name": "Morgan Stanley", "type": "Investment Bank", "sector": "Investment Banking"},
+            {"name": "Wells Fargo", "type": "Commercial Bank", "sector": "Banking"}
+        ]
+    
+    # Filter companies based on query
+    suggestions = []
+    for company in companies:
+        company_name_lower = company['name'].lower()
+        # Check if query matches start of name or any word in the name
+        if (company_name_lower.startswith(query) or 
+            any(word.startswith(query) for word in company_name_lower.split())):
+            suggestions.append({
+                'name': company['name'],
+                'type': company.get('type', 'Financial Services'),
+                'sector': company.get('sector', 'Finance'),
+                'ticker': company.get('ticker')
+            })
+            
+            if len(suggestions) >= 10:  # Limit to 10 suggestions
+                break
+    
+    # If no exact matches, try fuzzy matching
+    if not suggestions:
+        for company in companies:
+            if query in company['name'].lower():
+                suggestions.append({
+                    'name': company['name'],
+                    'type': company.get('type', 'Financial Services'),
+                    'sector': company.get('sector', 'Finance'),
+                    'ticker': company.get('ticker')
+                })
+                
+                if len(suggestions) >= 10:
+                    break
+    
+    return jsonify({'suggestions': suggestions})
 
 @app.route('/analyze', methods=['POST'])
 def analyze_company():

@@ -50,6 +50,25 @@ class NewsService:
             "tech stack", "modernization", "digital strategy"
         ]
         
+        # Financial-specific AI keywords
+        self.financial_keywords = [
+            "regtech", "fintech", "robo-advisor", "algorithmic trading",
+            "quantitative analysis", "risk modeling", "fraud detection",
+            "compliance automation", "KYC automation", "AML screening",
+            "credit scoring", "portfolio optimization", "trade surveillance",
+            "regulatory reporting", "Basel III", "MiFID II", "GDPR compliance",
+            "real-time payments", "blockchain", "digital banking",
+            "open banking", "API banking", "core banking modernization"
+        ]
+        
+        # Preferred financial news sources
+        self.financial_sources = [
+            "Financial Times", "Wall Street Journal", "Bloomberg",
+            "Reuters", "The Banker", "American Banker", "Finextra",
+            "Banking Technology", "ThinkAdvisor", "Risk.net",
+            "Institutional Investor", "Global Banking & Finance Review"
+        ]
+        
         # Mock data for testing without API key
         self.use_mock = not bool(self.api_key)
         if self.use_mock:
@@ -59,7 +78,8 @@ class NewsService:
         self, 
         company_name: str, 
         days_back: int = 30,
-        max_articles: int = 50
+        max_articles: int = 50,
+        is_financial: bool = False
     ) -> Dict[str, Any]:
         """
         Search for recent company news mentions with technology focus
@@ -80,8 +100,12 @@ class NewsService:
             to_date = datetime.now()
             from_date = to_date - timedelta(days=days_back)
             
-            # Build search query with company name and tech keywords
-            search_query = f'"{company_name}" AND (AI OR "artificial intelligence" OR "machine learning" OR "digital transformation" OR technology OR automation)'
+            # Build search query with company name and relevant keywords
+            if is_financial:
+                # For financial companies, include fintech and regulatory keywords
+                search_query = f'"{company_name}" AND (AI OR "artificial intelligence" OR "machine learning" OR fintech OR regtech OR "risk management" OR "compliance" OR "digital banking" OR "algorithmic trading" OR automation)'
+            else:
+                search_query = f'"{company_name}" AND (AI OR "artificial intelligence" OR "machine learning" OR "digital transformation" OR technology OR automation)'
             
             async with httpx.AsyncClient() as client:
                 # Search everything endpoint for comprehensive results
@@ -104,7 +128,7 @@ class NewsService:
                     
                     # Process and analyze articles
                     articles = data.get("articles", [])
-                    processed_articles = self._process_articles(company_name, articles)
+                    processed_articles = self._process_articles(company_name, articles, is_financial)
                     
                     return {
                         "total_articles_found": data.get("totalResults", 0),
@@ -136,7 +160,7 @@ class NewsService:
             logger.error(f"Error fetching news: {e}")
             return self._get_mock_news(company_name)
     
-    def _process_articles(self, company_name: str, articles: List[Dict]) -> List[Dict]:
+    def _process_articles(self, company_name: str, articles: List[Dict], is_financial: bool = False) -> List[Dict]:
         """
         Process raw articles and extract relevant information
         
@@ -172,10 +196,12 @@ class NewsService:
                     company_name,
                     title,
                     article.get("description", ""),
-                    article.get("content", "")
+                    article.get("content", ""),
+                    is_financial
                 ),
                 "ai_keywords_found": self._extract_ai_keywords(
-                    f"{title} {article.get('description', '')} {article.get('content', '')}"
+                    f"{title} {article.get('description', '')} {article.get('content', '')}",
+                    is_financial
                 )
             }
             
@@ -193,7 +219,8 @@ class NewsService:
         company_name: str, 
         title: str, 
         description: str, 
-        content: str
+        content: str,
+        is_financial: bool = False
     ) -> int:
         """
         Calculate relevance score (0-100) based on keyword density and recency
@@ -221,7 +248,13 @@ class NewsService:
         
         # Tech keyword density
         tech_keyword_count = 0
-        for keyword in self.tech_keywords:
+        keywords_to_check = self.tech_keywords
+        
+        # Add financial keywords if it's a financial company
+        if is_financial:
+            keywords_to_check = self.tech_keywords + self.financial_keywords
+        
+        for keyword in keywords_to_check:
             if keyword.lower() in full_text:
                 tech_keyword_count += 1
         
@@ -230,7 +263,11 @@ class NewsService:
         score += keyword_score
         
         # Title relevance boost
-        if any(kw in title.lower() for kw in ["ai", "artificial intelligence", "machine learning", "automation"]):
+        title_boost_keywords = ["ai", "artificial intelligence", "machine learning", "automation"]
+        if is_financial:
+            title_boost_keywords.extend(["fintech", "regtech", "risk management", "compliance"])
+        
+        if any(kw in title.lower() for kw in title_boost_keywords):
             score += 20
         
         return min(score, 100)
@@ -267,7 +304,7 @@ class NewsService:
         
         return False
     
-    def _extract_ai_keywords(self, text: str) -> List[str]:
+    def _extract_ai_keywords(self, text: str, is_financial: bool = False) -> List[str]:
         """
         Extract AI/tech keywords found in text
         
@@ -280,9 +317,16 @@ class NewsService:
         text_lower = text.lower()
         found_keywords = []
         
+        # Check tech keywords
         for keyword in self.tech_keywords:
             if keyword.lower() in text_lower:
                 found_keywords.append(keyword)
+        
+        # Check financial keywords if applicable
+        if is_financial:
+            for keyword in self.financial_keywords:
+                if keyword.lower() in text_lower:
+                    found_keywords.append(keyword)
         
         return found_keywords[:10]  # Return top 10 to avoid clutter
     

@@ -24,15 +24,24 @@ class WebScraperService:
         "neural network", "data science", "ai-powered", "ml model",
         "predictive analytics", "computer vision", "natural language processing",
         "nlp", "automation", "intelligent", "algorithm", "tensorflow",
-        "pytorch", "scikit-learn", "data pipeline", "mlops", "ai platform"
+        "pytorch", "scikit-learn", "data pipeline", "mlops", "ai platform",
+        # Financial AI keywords
+        "robo-advisor", "algorithmic trading", "fraud detection",
+        "credit scoring", "risk modeling", "regtech", "fintech",
+        "quantitative analysis", "aml screening", "kyc automation",
+        "trade surveillance", "market surveillance", "compliance automation"
     ]
     
     # Technology stack indicators
     TECH_INDICATORS = {
         "cloud": ["aws", "azure", "gcp", "google cloud", "cloud-native", "kubernetes", "docker"],
         "modern_stack": ["react", "vue", "angular", "node.js", "python", "golang", "rust"],
-        "data": ["spark", "hadoop", "kafka", "elasticsearch", "mongodb", "postgresql"],
-        "ai_tools": ["tensorflow", "pytorch", "hugging face", "openai", "langchain", "jupyter"]
+        "data": ["spark", "hadoop", "kafka", "elasticsearch", "mongodb", "postgresql", 
+                 "snowflake", "databricks", "palantir", "alteryx"],
+        "ai_tools": ["tensorflow", "pytorch", "hugging face", "openai", "langchain", "jupyter"],
+        "financial_systems": ["bloomberg", "refinitiv", "factset", "murex", "calypso",
+                             "fidessa", "temenos", "finastra", "fis", "fiserv"],
+        "compliance_tools": ["actimize", "verafin", "fenergo", "accuity", "lexisnexis"]
     }
     
     def __init__(self):

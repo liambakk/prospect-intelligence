@@ -44,7 +44,18 @@ class JobPostingService:
         "artificial intelligence",
         "deep learning engineer",
         "computer vision engineer",
-        "NLP engineer"
+        "NLP engineer",
+        # Financial-specific tech roles
+        "quantitative analyst",
+        "quant developer",
+        "quantitative researcher",
+        "risk modeler",
+        "credit risk analyst",
+        "market risk analyst",
+        "financial data scientist",
+        "financial engineer",
+        "algo trader",
+        "systematic trader"
     ]
     
     # AI/ML keywords to identify in job descriptions
@@ -56,7 +67,12 @@ class JobPostingService:
         "generative ai", "llm", "large language model", "transformers",
         "hugging face", "opencv", "pandas", "numpy",
         "spark", "hadoop", "databricks", "mlops", "kubeflow",
-        "sagemaker", "azure ml", "vertex ai", "ml pipeline"
+        "sagemaker", "azure ml", "vertex ai", "ml pipeline",
+        # Financial AI/ML keywords
+        "quantitative modeling", "risk modeling", "portfolio optimization",
+        "algorithmic trading", "backtesting", "monte carlo", "black-scholes",
+        "time series", "var", "cvar", "credit scoring", "basel",
+        "fraud detection", "anomaly detection", "aml", "kyc", "regulatory reporting"
     ]
     
     def __init__(self):

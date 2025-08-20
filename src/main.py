@@ -19,9 +19,12 @@ from services.clearbit_service import ClearbitService
 from services.hunter_service import HunterService
 from services.web_scraper import WebScraperService
 from services.scoring_engine import AIReadinessScoringEngine
+from services.financial_scoring_engine import FinancialAIReadinessScoringEngine
 from services.job_posting_service import JobPostingService
 from services.report_generator import PDFReportGenerator
+from services.enhanced_report_generator import EnhancedPDFReportGenerator
 from services.news_service import NewsService
+from services.company_database import CompanyDatabase
 import logging
 
 # Configure logging
@@ -50,9 +53,12 @@ hunter_service = HunterService()
 clearbit_service = ClearbitService()
 web_scraper = WebScraperService()
 scoring_engine = AIReadinessScoringEngine()
+financial_scoring_engine = FinancialAIReadinessScoringEngine()
 job_posting_service = JobPostingService()
 pdf_generator = PDFReportGenerator()
+enhanced_pdf_generator = EnhancedPDFReportGenerator()
 news_service = NewsService()
+company_database = CompanyDatabase()
 
 # Mount static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -295,7 +301,8 @@ async def analyze_comprehensive(request: Request, company: CompanyRequest):
                     "industry": hunter_result.company_industry,
                     "size": hunter_result.company_size,
                     "location": f"{hunter_result.city}, {hunter_result.state} {hunter_result.country}".strip(),
-                    "key_contacts": hunter_result.contacts[:5] if hunter_result.contacts else []
+                    "key_contacts": hunter_result.contacts[:5] if hunter_result.contacts else [],
+                    "technologies": hunter_result.technologies if hunter_result.technologies else []
                 }
         
         # 2. Scrape website for tech signals
@@ -308,12 +315,7 @@ async def analyze_comprehensive(request: Request, company: CompanyRequest):
         if company.name:
             job_data = await job_posting_service.search_company_jobs(company.name)
         
-        # 4. Collect news and press releases
-        news_data = None
-        if company.name:
-            news_data = await news_service.get_company_news(company.name, days_back=30)
-        
-        # 5. Try Clearbit as fallback for additional data
+        # 4. Try Clearbit as fallback for additional data
         clearbit_data = None
         if company.domain and not hunter_data:
             clearbit_result = await clearbit_service.get_company_data(company.domain)
@@ -325,14 +327,39 @@ async def analyze_comprehensive(request: Request, company: CompanyRequest):
                     "tech_stack": clearbit_result.tech_stack
                 }
         
-        # 6. Calculate comprehensive score
-        scoring_result = scoring_engine.calculate_ai_readiness_score(
+        # 5. Detect if it's a financial company
+        is_financial = financial_scoring_engine.detect_financial_company(
             hunter_data=hunter_data,
-            web_scraping_data=web_data,
             clearbit_data=clearbit_data,
-            job_posting_data=job_data,
-            news_data=news_data
+            company_name=company.name
         )
+        
+        # 6. Collect news and press releases (with financial focus if applicable)
+        news_data = None
+        if company.name:
+            news_data = await news_service.get_company_news(
+                company.name, 
+                days_back=30,
+                is_financial=is_financial
+            )
+        
+        # 7. Calculate comprehensive score using appropriate engine
+        if is_financial:
+            scoring_result = financial_scoring_engine.calculate_financial_ai_readiness(
+                hunter_data=hunter_data,
+                web_scraping_data=web_data,
+                clearbit_data=clearbit_data,
+                job_posting_data=job_data,
+                news_data=news_data
+            )
+        else:
+            scoring_result = scoring_engine.calculate_ai_readiness_score(
+                hunter_data=hunter_data,
+                web_scraping_data=web_data,
+                clearbit_data=clearbit_data,
+                job_posting_data=job_data,
+                news_data=news_data
+            )
         
         # 5. Compile comprehensive response
         company_name = company.name
@@ -341,7 +368,7 @@ async def analyze_comprehensive(request: Request, company: CompanyRequest):
         elif clearbit_data and clearbit_data.get("name"):
             company_name = clearbit_data["name"]
         
-        return {
+        response_data = {
             "company_name": company_name,
             "domain": company.domain,
             "ai_readiness_score": scoring_result["overall_score"],
@@ -351,6 +378,7 @@ async def analyze_comprehensive(request: Request, company: CompanyRequest):
             "key_strengths": scoring_result["key_strengths"],
             "improvement_areas": scoring_result["improvement_areas"],
             "recommendations": scoring_result["recommendations"],
+            "is_financial_company": is_financial,
             "data_sources": {
                 "hunter_io": hunter_data is not None,
                 "web_scraping": web_data is not None and web_data.get("ai_mentions_count", 0) > 0,
@@ -383,6 +411,13 @@ async def analyze_comprehensive(request: Request, company: CompanyRequest):
             }
         }
         
+        # Add financial-specific insights if applicable
+        if is_financial and "financial_insights" in scoring_result:
+            response_data["financial_insights"] = scoring_result["financial_insights"]
+            response_data["scoring_methodology"] = scoring_result.get("scoring_methodology", "Financial Services Optimized")
+        
+        return response_data
+        
     except Exception as e:
         logging.error(f"Error in comprehensive analysis: {e}")
         raise HTTPException(status_code=500, detail=f"Analysis failed: {str(e)}")
@@ -395,10 +430,10 @@ async def generate_pdf_report(request: Request, company: CompanyRequest):
     """
     try:
         # First, run comprehensive analysis
-        analysis_result = await analyze_comprehensive(company)
+        analysis_result = await analyze_comprehensive(request, company)
         
-        # Generate PDF report
-        report_path = pdf_generator.generate_report(
+        # Generate PDF report with enhanced design
+        report_path = enhanced_pdf_generator.generate_report(
             company_name=company.name,
             ai_readiness_data=analysis_result
         )
@@ -438,6 +473,40 @@ async def download_report(filename: str):
         )
     else:
         raise HTTPException(status_code=404, detail="Report not found")
+
+@app.get("/api/company-suggestions")
+async def get_company_suggestions(q: str = None):
+    """
+    Get company name suggestions for autocomplete
+    
+    Args:
+        q: Query string for company search
+    
+    Returns:
+        List of matching companies with details
+    """
+    if not q or len(q) < 2:
+        return {"suggestions": []}
+    
+    try:
+        # Search for matching companies
+        suggestions = company_database.search_companies(q, limit=8)
+        
+        # Format response for frontend
+        formatted_suggestions = []
+        for company in suggestions:
+            formatted_suggestions.append({
+                "name": company["name"],
+                "ticker": company.get("ticker", ""),
+                "type": company.get("type", "Company"),
+                "sector": company.get("sector", ""),
+            })
+        
+        return {"suggestions": formatted_suggestions}
+    
+    except Exception as e:
+        logger.error(f"Error fetching company suggestions: {e}")
+        return {"suggestions": []}
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
