@@ -283,6 +283,7 @@ class EnhancedPDFReportGenerator:
             
             # Score analysis
             story.extend(self._create_score_analysis(ai_readiness_data))
+            story.append(PageBreak())
             
             # Key insights
             story.extend(self._create_key_insights(ai_readiness_data))
@@ -290,19 +291,21 @@ class EnhancedPDFReportGenerator:
             
             # Technology signals
             story.extend(self._create_technology_section(ai_readiness_data))
+            story.append(PageBreak())
             
             # Hiring analysis
             if ai_readiness_data.get('company_data', {}).get('job_postings'):
                 story.extend(self._create_hiring_analysis(ai_readiness_data))
+                story.append(PageBreak())
             
             # Financial insights (if applicable)
             if ai_readiness_data.get('is_financial_company'):
-                story.append(PageBreak())
                 story.extend(self._create_financial_section(ai_readiness_data))
+                story.append(PageBreak())
             
             # Strategic recommendations
-            story.append(PageBreak())
             story.extend(self._create_recommendations(ai_readiness_data))
+            story.append(PageBreak())
             
             # Next steps
             story.extend(self._create_next_steps(ai_readiness_data))
@@ -320,6 +323,9 @@ class EnhancedPDFReportGenerator:
     def _create_cover_page(self, company_name: str, data: Dict[str, Any]) -> List:
         """Create a beautiful cover page with ModelML branding"""
         elements = []
+        
+        # Add vertical spacing to center content on page
+        elements.append(Spacer(1, 1.5*inch))
         
         # Add ModelML logo at the top
         try:
@@ -380,11 +386,11 @@ class EnhancedPDFReportGenerator:
             width="50%",
             thickness=1,
             color=self.COLORS['border_light'],
-            spaceAfter=36,
+            spaceAfter=24,
             spaceBefore=12,
             hAlign='CENTER'
         ))
-        elements.append(Spacer(1, 0.5*inch))
+        elements.append(Spacer(1, 0.3*inch))
         
         # Main title with enhanced styling
         title = Paragraph(
@@ -419,9 +425,9 @@ class EnhancedPDFReportGenerator:
         # Ensure score is a number, not a dict
         if isinstance(score, dict):
             score = score.get('total_score', 0)
-        gauge = ScoreGauge(score, width=250, height=250)
+        gauge = ScoreGauge(score, width=200, height=200)
         elements.append(gauge)
-        elements.append(Spacer(1, 0.3*inch))
+        elements.append(Spacer(1, 0.2*inch))
         
         # Readiness category
         category = data.get('readiness_category', 'Assessment Pending')
@@ -435,7 +441,7 @@ class EnhancedPDFReportGenerator:
         elements.append(Paragraph(category, cat_style))
         
         # Date
-        elements.append(Spacer(1, 1*inch))
+        elements.append(Spacer(1, 0.5*inch))
         date_str = datetime.now().strftime("%B %Y")
         date_para = Paragraph(
             date_str,
