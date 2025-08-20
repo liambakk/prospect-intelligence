@@ -411,33 +411,8 @@ class EnhancedPDFReportGenerator:
             self.styles['CoverSubtitle']
         ))
         
-        elements.append(Spacer(1, 1*inch))
-        
-        # Score display
-        score = self._extract_score(data.get('ai_readiness_score', 0))
-        gauge = ModernGauge(score, width=180, height=180)
-        elements.append(gauge)
-        
-        elements.append(Spacer(1, 0.5*inch))
-        
-        # Readiness level (only show the level, not the full evaluation text)
-        category = data.get('readiness_category', 'Assessment Pending')
-        # Extract just the readiness level (e.g., "Very High" from "Very High - Prime candidate...")
-        if ' - ' in category:
-            category = category.split(' - ')[0]
-        elements.append(Paragraph(
-            f"<b>{category}</b>",
-            ParagraphStyle(
-                'ReadinessLevel',
-                fontSize=16,
-                textColor=self._get_score_color(score),
-                alignment=TA_CENTER,
-                fontName='Helvetica-Bold'
-            )
-        ))
-        
-        # Date
-        elements.append(Spacer(1, 1.5*inch))
+        # Date - moved up to fill the space
+        elements.append(Spacer(1, 3*inch))
         date_str = datetime.now().strftime("%B %d, %Y")
         elements.append(Paragraph(date_str, self.styles['Footer']))
         
@@ -458,9 +433,58 @@ class EnhancedPDFReportGenerator:
         elements.append(SectionHeader(1, "Executive Summary"))
         elements.append(Spacer(1, 0.3*inch))
         
+        # Score gauge and readiness level (moved from cover page)
+        score = self._extract_score(data.get('ai_readiness_score', 0))
+        gauge = ModernGauge(score, width=180, height=180)
+        
+        # Center the gauge
+        gauge_table = Table([[gauge]], colWidths=[500])
+        gauge_table.setStyle(TableStyle([
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ]))
+        elements.append(gauge_table)
+        
+        elements.append(Spacer(1, 0.2*inch))
+        
+        # Readiness level
+        category = data.get('readiness_category', 'Assessment Pending')
+        # Extract just the readiness level (e.g., "Very High" from "Very High - Prime candidate...")
+        if ' - ' in category:
+            category_clean = category.split(' - ')[0]
+            evaluation = category.split(' - ')[1] if len(category.split(' - ')) > 1 else ""
+        else:
+            category_clean = category
+            evaluation = ""
+        
+        elements.append(Paragraph(
+            f"<b>{category_clean}</b>",
+            ParagraphStyle(
+                'ReadinessLevel',
+                fontSize=18,
+                textColor=self._get_score_color(score),
+                alignment=TA_CENTER,
+                fontName='Helvetica-Bold'
+            )
+        ))
+        
+        if evaluation:
+            elements.append(Paragraph(
+                evaluation,
+                ParagraphStyle(
+                    'ReadinessEval',
+                    fontSize=14,
+                    textColor=self.COLORS['text_secondary'],
+                    alignment=TA_CENTER,
+                    fontName='Helvetica',
+                    spaceAfter=20
+                )
+            ))
+        
+        elements.append(Spacer(1, 0.3*inch))
+        
         # Key metrics cards
         metrics_data = []
-        score = self._extract_score(data.get('ai_readiness_score', 0))
         
         # Create a table of metric cards
         card1 = MetricCard("AI Readiness", f"{int(score)}/100", '#3b82f6')
