@@ -2,6 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 from typing import Dict
 import re
+from urllib.parse import urljoin, urlparse
 
 class WebsiteScraper:
     def __init__(self):
@@ -12,13 +13,147 @@ class WebsiteScraper:
             'data science', 'algorithm', 'model', 'chatbot', 'RPA',
             'digital transformation', 'innovation', 'analytics'
         ]
+        self.headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
         
     def analyze_website(self, domain: str) -> Dict:
         """
         Analyze company website for AI/tech mentions
-        Returns mock data for demo
         """
+        # Try real scraping first
+        try:
+            real_data = self._scrape_real_website(domain)
+            if real_data and real_data.get('ai_mentions_count', 0) > 0:
+                return real_data
+        except Exception as e:
+            print(f"Error scraping website: {e}")
+        
+        # Fallback to mock data
         return self._get_mock_website_data(domain)
+    
+    def _scrape_real_website(self, domain: str) -> Dict:
+        """
+        Scrape actual website for AI/tech signals
+        """
+        # Ensure proper URL format
+        if not domain.startswith('http'):
+            url = f'https://{domain}'
+        else:
+            url = domain
+        
+        ai_mentions_count = 0
+        tech_pages = []
+        key_initiatives = []
+        tech_stack_visible = set()
+        
+        try:
+            # Fetch main page
+            response = requests.get(url, headers=self.headers, timeout=10)
+            response.raise_for_status()
+            
+            soup = BeautifulSoup(response.text, 'html.parser')
+            
+            # Get all text content
+            text_content = soup.get_text().lower()
+            
+            # Count AI mentions
+            for keyword in self.ai_keywords:
+                ai_mentions_count += text_content.count(keyword.lower())
+            
+            # Look for technology-related links
+            for link in soup.find_all('a', href=True):
+                href = link['href'].lower()
+                link_text = link.get_text().lower()
+                
+                tech_indicators = ['technology', 'innovation', 'ai', 'ml', 'data', 'digital', 
+                                  'engineering', 'careers', 'about', 'products', 'solutions']
+                
+                if any(indicator in href or indicator in link_text for indicator in tech_indicators):
+                    full_url = urljoin(url, link['href'])
+                    if urlparse(full_url).netloc == urlparse(url).netloc:  # Same domain
+                        tech_pages.append(link['href'])
+            
+            # Deduplicate and limit tech pages
+            tech_pages = list(set(tech_pages))[:10]
+            
+            # Try to fetch key pages for more info
+            pages_to_check = ['/about', '/technology', '/careers', '/products', '/solutions']
+            
+            for page in pages_to_check[:3]:  # Limit to avoid too many requests
+                try:
+                    page_url = urljoin(url, page)
+                    page_response = requests.get(page_url, headers=self.headers, timeout=5)
+                    
+                    if page_response.status_code == 200:
+                        page_soup = BeautifulSoup(page_response.text, 'html.parser')
+                        page_text = page_soup.get_text().lower()
+                        
+                        # Look for AI initiatives
+                        for keyword in ['artificial intelligence', 'machine learning', 'automation', 'digital transformation']:
+                            if keyword in page_text:
+                                # Try to extract context around the keyword
+                                sentences = page_text.split('.')
+                                for sentence in sentences:
+                                    if keyword in sentence and len(sentence) > 20 and len(sentence) < 200:
+                                        initiative = sentence.strip().capitalize()
+                                        if initiative and len(key_initiatives) < 5:
+                                            key_initiatives.append(initiative[:150])  # Truncate long sentences
+                                            break
+                        
+                        # Count additional AI mentions
+                        for keyword in self.ai_keywords:
+                            ai_mentions_count += page_text.count(keyword.lower())
+                        
+                except:
+                    continue
+            
+            # Detect tech stack from page content
+            tech_patterns = {
+                'python': r'\bpython\b',
+                'java': r'\bjava\b',
+                'react': r'\breact\b',
+                'aws': r'\baws\b|\bamazon web services\b',
+                'azure': r'\bazure\b|\bmicrosoft azure\b',
+                'kubernetes': r'\bkubernetes\b|\bk8s\b',
+                'docker': r'\bdocker\b',
+                'tensorflow': r'\btensorflow\b',
+                'pytorch': r'\bpytorch\b',
+                'spark': r'\bspark\b|\bapache spark\b',
+                'hadoop': r'\bhadoop\b',
+                'mongodb': r'\bmongodb\b',
+                'postgresql': r'\bpostgresql\b|\bpostgres\b'
+            }
+            
+            for tech, pattern in tech_patterns.items():
+                if re.search(pattern, text_content):
+                    tech_stack_visible.add(tech.capitalize())
+            
+            # Calculate innovation score based on findings
+            innovation_score = min(100, ai_mentions_count * 2 + len(tech_pages) * 5 + len(key_initiatives) * 10)
+            
+            # Determine digital maturity
+            if ai_mentions_count > 50:
+                digital_maturity = "Leading"
+            elif ai_mentions_count > 20:
+                digital_maturity = "Advanced"
+            elif ai_mentions_count > 5:
+                digital_maturity = "Developing"
+            else:
+                digital_maturity = "Basic"
+            
+            return {
+                'ai_mentions_count': ai_mentions_count,
+                'tech_pages': tech_pages[:5],  # Return top 5 tech pages
+                'key_initiatives': key_initiatives,
+                'tech_stack_visible': list(tech_stack_visible),
+                'innovation_score': innovation_score,
+                'digital_maturity': digital_maturity
+            }
+            
+        except Exception as e:
+            print(f"Error in web scraping: {e}")
+            return None
     
     def _get_mock_website_data(self, domain: str) -> Dict:
         """

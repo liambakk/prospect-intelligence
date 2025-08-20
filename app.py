@@ -3,9 +3,10 @@ import json
 import time
 from datetime import datetime
 import os
+import asyncio
 
-# Import services
-from services.clearbit_service import ClearbitService
+# Import services - using real implementations
+from src.services.hunter_service import HunterService
 from services.job_scraper import JobScraper
 from services.news_collector import NewsCollector
 from services.website_scraper import WebsiteScraper
@@ -29,7 +30,7 @@ def after_request(response):
     return response
 
 # Initialize services
-clearbit_service = ClearbitService(Config.CLEARBIT_API_KEY)
+hunter_service = HunterService(os.getenv('HUNTER_API_KEY'))
 job_scraper = JobScraper()
 news_collector = NewsCollector(Config.NEWS_API_KEY)
 website_scraper = WebsiteScraper()
@@ -166,9 +167,55 @@ def analyze_company():
             'steps': []
         }
         
-        # Step 1: Company Enrichment
+        # Step 1: Company Enrichment using Hunter.io
         response['steps'].append({'step': 'Fetching company information', 'status': 'complete'})
-        company_info = clearbit_service.enrich_company(company_name)
+        # Convert company name to domain for Hunter.io
+        domain = f"{company_name.lower().replace(' ', '').replace(',', '').replace('.', '')}.com"
+        
+        # Run async Hunter.io search
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        hunter_data = loop.run_until_complete(hunter_service.search_domain(domain))
+        loop.close()
+        
+        # Convert Hunter data to expected format
+        if hunter_data:
+            company_info = {
+                'name': hunter_data.company_name or company_name,
+                'domain': hunter_data.domain or domain,
+                'industry': hunter_data.company_industry or 'Financial Services',
+                'employeeCount': 0,  # Hunter doesn't provide this directly
+                'description': f"{hunter_data.company_name or company_name} - {hunter_data.company_type or 'Company'}",
+                'tags': hunter_data.technologies or [],
+                'techStack': hunter_data.technologies or [],
+                'location': {
+                    'city': hunter_data.city or 'New York',
+                    'state': hunter_data.state or 'NY',
+                    'country': hunter_data.country or 'US'
+                },
+                'social': {
+                    'twitter': hunter_data.twitter,
+                    'facebook': hunter_data.facebook,
+                    'linkedin': hunter_data.linkedin
+                },
+                'email_count': hunter_data.email_count
+            }
+        else:
+            # Fallback if Hunter.io fails
+            company_info = {
+                'name': company_name,
+                'domain': domain,
+                'industry': 'Financial Services',
+                'employeeCount': 0,
+                'description': f"{company_name} company information",
+                'tags': [],
+                'techStack': [],
+                'location': {
+                    'city': 'New York',
+                    'state': 'NY',
+                    'country': 'US'
+                }
+            }
         
         # Step 2: Job Analysis
         response['steps'].append({'step': 'Analyzing job postings', 'status': 'complete'})
@@ -239,13 +286,47 @@ def generate_report():
         else:
             # Need to re-analyze the company
             # Run the analysis to get fresh data
+            domain = request_data.get('domain', f"{company_name.lower().replace(' ', '').replace(',', '').replace('.', '')}.com")
+            
+            # Get Hunter.io data
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            hunter_data = loop.run_until_complete(hunter_service.search_domain(domain))
+            loop.close()
+            
+            # Convert Hunter data to expected format
+            if hunter_data:
+                company_info = {
+                    'name': hunter_data.company_name or company_name,
+                    'domain': hunter_data.domain or domain,
+                    'industry': hunter_data.company_industry or 'Financial Services',
+                    'employeeCount': 0,
+                    'description': f"{hunter_data.company_name or company_name} - {hunter_data.company_type or 'Company'}",
+                    'tags': hunter_data.technologies or [],
+                    'techStack': hunter_data.technologies or [],
+                    'location': {
+                        'city': hunter_data.city or 'New York',
+                        'state': hunter_data.state or 'NY',
+                        'country': hunter_data.country or 'US'
+                    }
+                }
+            else:
+                company_info = {
+                    'name': company_name,
+                    'domain': domain,
+                    'industry': 'Financial Services',
+                    'employeeCount': 0,
+                    'description': f"{company_name} company information",
+                    'tags': [],
+                    'techStack': [],
+                    'location': {'city': 'New York', 'state': 'NY', 'country': 'US'}
+                }
+            
             company_data = {
-                'company_info': clearbit_service.enrich_company(company_name),
+                'company_info': company_info,
                 'job_analysis': job_scraper.analyze_job_postings(company_name),
                 'news_analysis': news_collector.get_recent_news(company_name),
-                'website_analysis': website_scraper.analyze_website(
-                    request_data.get('domain', f"{company_name.lower().replace(' ', '')}.com")
-                )
+                'website_analysis': website_scraper.analyze_website(domain)
             }
             
             readiness_score = readiness_scorer.calculate_ai_readiness_score(company_data)

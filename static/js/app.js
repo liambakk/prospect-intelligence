@@ -8,10 +8,8 @@ let isValidCompany = false; // Track if current input is a valid company
 function setCompany(companyName) {
     const input = document.getElementById('companyInput');
     input.value = companyName;
-    validatedCompanies.add(companyName);
-    isValidCompany = true;
+    // No validation needed - any company is valid
     input.classList.remove('invalid-input');
-    input.classList.add('valid-input');
     hideAutocomplete();
 }
 
@@ -24,15 +22,8 @@ async function analyzeCompany() {
         return;
     }
     
-    // Validate company before analyzing
-    if (!isValidCompany && !validatedCompanies.has(companyName)) {
-        const isValid = await validateCompany(companyName);
-        if (!isValid) {
-            companyInput.classList.add('invalid-input');
-            alert('Please select a valid company from the suggestions. The company "' + companyName + '" was not found in our database.');
-            return;
-        }
-    }
+    // Skip validation - allow any company name for real-time search
+    // The APIs will handle unknown companies gracefully
     
     // Show progress section
     document.getElementById('progressSection').style.display = 'block';
@@ -493,16 +484,10 @@ async function generateReport() {
     }
 }
 
-// Validation function
+// Validation function - now always returns true since we allow any company
 async function validateCompany(companyName) {
-    try {
-        const response = await fetch(`/api/validate-company?name=${encodeURIComponent(companyName)}`);
-        const data = await response.json();
-        return data.valid === true;
-    } catch (error) {
-        console.error('Error validating company:', error);
-        return false;
-    }
+    // Always return true - we'll search for any company name
+    return true;
 }
 
 // Autocomplete functions
@@ -527,17 +512,17 @@ function showAutocomplete(suggestions) {
     if (!dropdown) return;
     
     if (suggestions.length === 0) {
-        // Show "no results" message if user has typed something
+        // Show helpful message that any company can be searched
         if (input.value.trim().length >= 2) {
             dropdown.innerHTML = `
                 <div class="autocomplete-no-results">
-                    <span class="no-results-icon">⚠️</span>
-                    <span class="no-results-text">No matching companies found</span>
-                    <span class="no-results-hint">Please check the spelling or try a different company</span>
+                    <span class="no-results-icon">🔍</span>
+                    <span class="no-results-text">No suggestions found</span>
+                    <span class="no-results-hint">Press Enter to search for "${input.value}" anyway</span>
                 </div>
             `;
             dropdown.style.display = 'block';
-            input.classList.add('invalid-input');
+            // Don't mark as invalid - any company is valid
             input.classList.remove('valid-input');
             isValidCompany = false;
         } else {
@@ -643,9 +628,9 @@ document.addEventListener('DOMContentLoaded', () => {
         input.addEventListener('input', function() {
             const query = this.value.trim();
             
-            // Reset validation state when typing
-            isValidCompany = false;
+            // No validation needed - remove validation state classes
             this.classList.remove('valid-input');
+            this.classList.remove('invalid-input');
             
             // Clear previous timeout
             if (autocompleteTimeout) {
