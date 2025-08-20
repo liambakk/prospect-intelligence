@@ -72,7 +72,7 @@ class ScoreGauge(Flowable):
         start_angle = -135
         arc_angle = (self.score / 100) * 270
         canvas.arc(cx - radius, cy - radius, cx + radius, cy + radius, 
-                  start_angle, start_angle + arc_angle, stroke=1, fill=0)
+                  start_angle, start_angle + arc_angle)
         
         # Score text
         canvas.setFillColor(HexColor('#0f1419'))
