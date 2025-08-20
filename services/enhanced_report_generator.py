@@ -447,15 +447,13 @@ class EnhancedPDFReportGenerator:
         
         elements.append(Spacer(1, 0.2*inch))
         
-        # Readiness level
+        # Readiness level (without evaluation text)
         category = data.get('readiness_category', 'Assessment Pending')
         # Extract just the readiness level (e.g., "Very High" from "Very High - Prime candidate...")
         if ' - ' in category:
             category_clean = category.split(' - ')[0]
-            evaluation = category.split(' - ')[1] if len(category.split(' - ')) > 1 else ""
         else:
             category_clean = category
-            evaluation = ""
         
         elements.append(Paragraph(
             f"<b>{category_clean}</b>",
@@ -464,22 +462,10 @@ class EnhancedPDFReportGenerator:
                 fontSize=18,
                 textColor=self._get_score_color(score),
                 alignment=TA_CENTER,
-                fontName='Helvetica-Bold'
+                fontName='Helvetica-Bold',
+                spaceAfter=20
             )
         ))
-        
-        if evaluation:
-            elements.append(Paragraph(
-                evaluation,
-                ParagraphStyle(
-                    'ReadinessEval',
-                    fontSize=14,
-                    textColor=self.COLORS['text_secondary'],
-                    alignment=TA_CENTER,
-                    fontName='Helvetica',
-                    spaceAfter=20
-                )
-            ))
         
         elements.append(Spacer(1, 0.3*inch))
         
