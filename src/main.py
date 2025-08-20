@@ -25,6 +25,10 @@ from services.report_generator import PDFReportGenerator
 from services.enhanced_report_generator import EnhancedPDFReportGenerator
 from services.news_service import NewsService
 from services.company_database import CompanyDatabase
+from services.decision_maker_service import DecisionMakerService
+from services.brightdata_service import BrightDataService
+from services.brightdata_linkedin_service import BrightDataLinkedInService
+from services.brightdata_correct_service import BrightDataCorrectService
 import logging
 
 # Configure logging
@@ -59,6 +63,10 @@ pdf_generator = PDFReportGenerator()
 enhanced_pdf_generator = EnhancedPDFReportGenerator()
 news_service = NewsService()
 company_database = CompanyDatabase()
+decision_maker_service = DecisionMakerService()
+brightdata_service = BrightDataService()
+brightdata_linkedin_service = BrightDataLinkedInService()
+brightdata_correct_service = BrightDataCorrectService()
 
 # Mount static files
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -343,7 +351,62 @@ async def analyze_comprehensive(request: Request, company: CompanyRequest):
                 is_financial=is_financial
             )
         
-        # 7. Calculate comprehensive score using appropriate engine
+        # 7. Get enhanced LinkedIn data from BrightData
+        linkedin_company = None
+        brightdata_decision_makers = []
+        if company.name:
+            # Use the corrected BrightData service to search for decision makers
+            brightdata_decision_makers = await brightdata_correct_service.search_linkedin_profiles(company.name)
+            
+            # Extract company info from the first profile if available
+            if brightdata_decision_makers and len(brightdata_decision_makers) > 0:
+                first_profile = brightdata_decision_makers[0]
+                linkedin_company = {
+                    "name": company.name,
+                    "employee_count": sum(p.get("connections", 0) for p in brightdata_decision_makers),
+                    "follower_count": sum(p.get("followers", 0) for p in brightdata_decision_makers),
+                    "recent_updates": [p.get("recent_activity", "") for p in brightdata_decision_makers[:3] if p.get("recent_activity")]
+                }
+        
+        # 8. Identify key decision makers (combine Hunter.io and BrightData)
+        decision_makers = decision_maker_service.identify_decision_makers(
+            hunter_data=hunter_data,
+            company_name=company.name,
+            is_financial=is_financial
+        )
+        
+        # Enhance with BrightData LinkedIn profiles
+        if brightdata_decision_makers:
+            for bd_dm in brightdata_decision_makers[:3]:  # Add top 3 from BrightData
+                skills = bd_dm.get("skills", [])
+                experience_years = bd_dm.get("experience_years", 0)
+                about = bd_dm.get("about", "")[:100] if bd_dm.get("about") else ""
+                
+                decision_makers.insert(0, {
+                    "name": bd_dm.get("name", "Unknown"),
+                    "title": bd_dm.get("title", "Unknown"),
+                    "email": "",  # LinkedIn doesn't provide emails
+                    "linkedin": bd_dm.get("linkedin_url", ""),
+                    "priority": 1,  # High priority for LinkedIn verified profiles
+                    "role": "LinkedIn Verified Profile",
+                    "approach": f"Personalized LinkedIn outreach - {bd_dm.get('title', 'Executive')}",
+                    "confidence": 95,
+                    "skills": skills,
+                    "experience_years": experience_years,
+                    "followers": bd_dm.get("followers", 0),
+                    "connections": bd_dm.get("connections", 0),
+                    "about_snippet": about,
+                    "recent_activity": bd_dm.get("recent_activity", ""),
+                    "education": bd_dm.get("education", ""),
+                    "talking_points": [
+                        f"Connect on expertise in {', '.join(skills[:2])}" if skills else "Discuss industry trends",
+                        f"Reference their {experience_years}+ years of experience" if experience_years > 0 else "Acknowledge their leadership role",
+                        f"Recent activity: {bd_dm.get('recent_activity', '')[:50]}" if bd_dm.get("recent_activity") else "ModelML's value for your role",
+                        "How ModelML accelerates AI initiatives at scale"
+                    ]
+                })
+        
+        # 8. Calculate comprehensive score using appropriate engine
         if is_financial:
             scoring_result = financial_scoring_engine.calculate_financial_ai_readiness(
                 hunter_data=hunter_data,
@@ -361,12 +424,36 @@ async def analyze_comprehensive(request: Request, company: CompanyRequest):
                 news_data=news_data
             )
         
-        # 5. Compile comprehensive response
+        # 9. Generate outreach strategy
+        outreach_strategy = decision_maker_service.generate_outreach_strategy(
+            decision_makers=decision_makers,
+            ai_readiness_score=scoring_result["overall_score"],
+            company_name=company.name
+        )
+        
+        # 10. Compile comprehensive response
         company_name = company.name
         if hunter_data and hunter_data.get("organization"):
             company_name = hunter_data["organization"]
         elif clearbit_data and clearbit_data.get("name"):
             company_name = clearbit_data["name"]
+        
+        # Format decision makers for response
+        formatted_decision_makers = []
+        for dm in decision_makers[:5]:  # Top 5 decision makers
+            formatted_dm = {
+                "name": dm.get("name", "Unknown"),
+                "title": dm.get("title", "Unknown"),
+                "role": dm.get("role", "Decision Maker"),
+                "approach": dm.get("approach", "Standard outreach"),
+                "priority": dm.get("priority", 3),
+                "talking_points": dm.get("talking_points", [])
+            }
+            if dm.get("email"):
+                formatted_dm["email"] = dm["email"]
+            if dm.get("linkedin"):
+                formatted_dm["linkedin"] = dm["linkedin"]
+            formatted_decision_makers.append(formatted_dm)
         
         response_data = {
             "company_name": company_name,
@@ -377,17 +464,37 @@ async def analyze_comprehensive(request: Request, company: CompanyRequest):
             "component_scores": scoring_result["component_scores"],
             "key_strengths": scoring_result["key_strengths"],
             "improvement_areas": scoring_result["improvement_areas"],
-            "recommendations": scoring_result["recommendations"],
+            "recommendations": {
+                "decision_makers": formatted_decision_makers,
+                "sales_approach": outreach_strategy,
+                "key_talking_points": outreach_strategy.get("messaging", ""),
+                "next_steps": [
+                    f"Target {len(formatted_decision_makers)} identified decision makers",
+                    f"Use {outreach_strategy.get('approach', 'standard')} approach",
+                    f"Timeline: {outreach_strategy.get('timeline', '2-4 weeks')}",
+                    "Prepare customized demo focusing on identified use cases"
+                ]
+            },
             "is_financial_company": is_financial,
             "data_sources": {
                 "hunter_io": hunter_data is not None,
                 "web_scraping": web_data is not None and web_data.get("ai_mentions_count", 0) > 0,
                 "job_postings": job_data is not None and job_data.get("total_jobs_found", 0) > 0,
                 "news_articles": news_data is not None and news_data.get("articles_processed", 0) > 0,
-                "clearbit": clearbit_data is not None
+                "clearbit": clearbit_data is not None,
+                "linkedin": linkedin_company is not None,
+                "brightdata": len(brightdata_decision_makers) > 0
             },
             "company_data": {
                 "basic_info": hunter_data or clearbit_data or {},
+                "linkedin_profile": {
+                    "company_size": linkedin_company.get("size") if linkedin_company else None,
+                    "employee_count": linkedin_company.get("employee_count") if linkedin_company else None,
+                    "follower_count": linkedin_company.get("follower_count") if linkedin_company else None,
+                    "specialties": linkedin_company.get("specialties", []) if linkedin_company else [],
+                    "recent_updates": linkedin_company.get("recent_updates", [])[:3] if linkedin_company else [],
+                    "founded": linkedin_company.get("founded") if linkedin_company else None
+                } if linkedin_company else {},
                 "tech_signals": {
                     "ai_mentions": web_data.get("ai_mentions_count", 0) if web_data else 0,
                     "tech_stack": web_data.get("tech_stack_detected", []) if web_data else [],
@@ -424,18 +531,19 @@ async def analyze_comprehensive(request: Request, company: CompanyRequest):
 
 @app.post("/generate-report")
 @limiter.limit("5/minute")
-async def generate_pdf_report(request: Request, company: CompanyRequest):
+async def generate_pdf_report(request: Request, analysis_data: Dict[str, Any]):
     """
     Generate a PDF report for a company's AI readiness assessment
     """
     try:
-        # First, run comprehensive analysis
-        analysis_result = await analyze_comprehensive(request, company)
+        # Extract company info from the analysis data
+        company_name = analysis_data.get("company_name", "Unknown Company")
+        domain = analysis_data.get("domain")
         
         # Generate PDF report with enhanced design
         report_path = enhanced_pdf_generator.generate_report(
-            company_name=company.name,
-            ai_readiness_data=analysis_result
+            company_name=company_name,
+            ai_readiness_data=analysis_data
         )
         
         # Return file for download

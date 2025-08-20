@@ -199,20 +199,26 @@ class HunterService:
         
         # Extract key contacts (limit to executives/decision makers)
         contacts = []
-        for email_data in emails[:5]:  # Limit to top 5
-            position = email_data.get("position") or email_data.get("title")
-            if position:
-                first_name = email_data.get("first_name", "")
-                last_name = email_data.get("last_name", "")
-                full_name = f"{first_name} {last_name}".strip()
-                
-                if full_name:
-                    contacts.append({
-                        "name": full_name,
-                        "title": position,
-                        "department": email_data.get("department"),
-                        "seniority": email_data.get("seniority")
-                    })
+        for email_data in emails[:10]:  # Get more contacts for better decision maker identification
+            first_name = email_data.get("first_name", "")
+            last_name = email_data.get("last_name", "")
+            full_name = f"{first_name} {last_name}".strip()
+            position = email_data.get("position") or email_data.get("title") or ""
+            
+            # Include all contacts with emails, even without position
+            if email_data.get("value"):  # Has email address
+                contacts.append({
+                    "first_name": first_name,
+                    "last_name": last_name,
+                    "name": full_name if full_name else "Unknown",
+                    "email": email_data.get("value"),
+                    "title": position,
+                    "department": email_data.get("department"),
+                    "seniority": email_data.get("seniority"),
+                    "confidence": email_data.get("confidence", 0),
+                    "linkedin": email_data.get("linkedin_url"),
+                    "phone": email_data.get("phone_number")
+                })
         
         # Build response with available data
         return HunterDomainData(

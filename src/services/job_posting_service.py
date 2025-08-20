@@ -126,6 +126,10 @@ class JobPostingService:
             all_jobs = []
             
             # Search for tech/AI jobs at the company
+            if not company_name:
+                logger.error("Company name is None or empty")
+                return self._get_mock_data("Unknown")
+            
             query = f"{company_name} software engineer data scientist machine learning"
             
             async with httpx.AsyncClient(timeout=30) as client:

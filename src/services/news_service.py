@@ -32,7 +32,7 @@ class NewsService:
     
     def __init__(self):
         """Initialize the news collection service"""
-        self.api_key = os.getenv("NEWSAPI_KEY")
+        self.api_key = os.getenv("NEWS_API_KEY")
         self.base_url = "https://newsapi.org/v2"
         self.headers = {
             "X-Api-Key": self.api_key,

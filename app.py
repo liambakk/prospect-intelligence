@@ -102,11 +102,14 @@ def get_company_suggestions():
     return jsonify({'suggestions': suggestions})
 
 @app.route('/analyze', methods=['POST'])
+@app.route('/analyze/comprehensive', methods=['POST'])
 def analyze_company():
     """Main endpoint for company analysis"""
     try:
         data = request.json
-        company_name = data.get('company_name', '').strip()
+        # Support both 'company_name' and 'name' parameters
+        company_name = data.get('company_name') or data.get('name', '')
+        company_name = company_name.strip()
         
         if not company_name:
             return jsonify({'error': 'Company name is required'}), 400
@@ -151,14 +154,25 @@ def analyze_company():
         response['steps'].append({'step': 'Generating sales recommendations', 'status': 'complete'})
         recommendations = recommendation_engine.generate_sales_approach(company_data, readiness_score)
         
-        # Compile final response
+        # Compile final response (matching JavaScript expectations)
         response['status'] = 'complete'
+        response['company_name'] = company_name
         response['company_info'] = company_info
         response['readiness_score'] = readiness_score
+        response['ai_readiness_score'] = readiness_score.get('total_score', 0)
+        response['readiness_category'] = readiness_score.get('readiness_level', 'Unknown')
+        response['component_scores'] = readiness_score.get('component_scores', {})
         response['recommendations'] = recommendations
         response['job_analysis'] = job_analysis
         response['news_analysis'] = news_analysis
         response['website_analysis'] = website_analysis
+        response['company_data'] = {
+            'basic_info': company_info,
+            'job_postings': job_analysis,
+            'news_insights': news_analysis,
+            'tech_signals': website_analysis
+        }
+        response['domain'] = company_info.get('domain', '')
         response['timestamp'] = datetime.now().isoformat()
         
         return jsonify(response)
@@ -166,22 +180,54 @@ def analyze_company():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/generate_report', methods=['POST'])
+@app.route('/generate-report', methods=['POST'])
 def generate_report():
     """Generate PDF report for analysis"""
     try:
-        data = request.json
+        request_data = request.json
+        company_name = request_data.get('name', '')
         
-        # Import PDF generator (we'll create this next)
+        # Check if we have the full analysis data
+        if 'company_name' in request_data and 'readiness_score' in request_data:
+            # Full data provided
+            data = request_data
+        else:
+            # Need to re-analyze the company
+            # Run the analysis to get fresh data
+            company_data = {
+                'company_info': clearbit_service.enrich_company(company_name),
+                'job_analysis': job_scraper.analyze_job_postings(company_name),
+                'news_analysis': news_collector.get_recent_news(company_name),
+                'website_analysis': website_scraper.analyze_website(
+                    request_data.get('domain', f"{company_name.lower().replace(' ', '')}.com")
+                )
+            }
+            
+            readiness_score = readiness_scorer.calculate_ai_readiness_score(company_data)
+            recommendations = recommendation_engine.generate_sales_approach(company_data, readiness_score)
+            
+            data = {
+                'company_name': company_name,
+                'company_info': company_data['company_info'],
+                'readiness_score': readiness_score,
+                'recommendations': recommendations,
+                'job_analysis': company_data['job_analysis'],
+                'news_analysis': company_data['news_analysis'],
+                'website_analysis': company_data['website_analysis'],
+                'timestamp': datetime.now().isoformat()
+            }
+        
+        # Import PDF generator
         from reports.pdf_generator import PDFGenerator
         
         pdf_gen = PDFGenerator()
         pdf_path = pdf_gen.generate_report(data)
         
         return send_file(pdf_path, as_attachment=True, 
-                        download_name=f"{data['company_name']}_AI_Readiness_Report.pdf")
+                        download_name=f"{company_name}_AI_Readiness_Report.pdf")
         
     except Exception as e:
+        print(f"Error generating report: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/test_companies')

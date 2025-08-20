@@ -310,10 +310,7 @@ async function generateReport() {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ 
-                name: currentAnalysisData.company_name,
-                domain: currentAnalysisData.domain 
-            })
+            body: JSON.stringify(currentAnalysisData)
         });
         
         if (response.ok) {
