@@ -209,5 +209,9 @@
     </div>
 
     <script src="{{ url_for('static', filename='js/app.js') }}?v={{ version }}"></script>
+    <script defer src="/_vercel/insights/script.js"></script>
+    <script>
+        window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+    </script>
 </body>
 </html>
